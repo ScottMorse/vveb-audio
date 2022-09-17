@@ -3,7 +3,8 @@
 name: Setup Project
 
 on:
-  workflow_call:
+  - workflow_call
+  - workflow_dispatch
 
 jobs:
   setup_project_job:

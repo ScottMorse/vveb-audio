@@ -3,10 +3,14 @@
 name: Run Checks
 
 on:
-  workflow_call:
+  - workflow_call
+  - workflow_dispatch
 
 jobs:
+  setup_project:
+    uses: ./.github/workflows/setup_project.yml
   run_checks:
+    needs: setup_project
     name: "Run Checks"
     runs-on: ubuntu-latest
     steps:
