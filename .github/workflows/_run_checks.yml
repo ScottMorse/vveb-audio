@@ -4,7 +4,10 @@ on:
   workflow_call:
 
 jobs:
+  setup_project:
+    uses: "./github/workflows/_setup_project.yml"
   run_checks:
+    needs: setup_project
     runs-on: ubuntu-latest
     steps:
       - name: "Run checks"
