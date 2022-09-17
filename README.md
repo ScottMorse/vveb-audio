@@ -28,6 +28,18 @@ This library should be fully extensible with custom AudioNode subclasses created
 - All source files should be written in TypeScript
 - Employ multi-paradigm style, with preference for pure functions
 - Use of `index.ts` is encouraged, but only for re-exporting (no new variables)
+- Naming
+  - Prefer medium/long variable names using full words (follow idea that a little verbose is better than too vague)
+  - camelCase all variables, args, methods, etc.
+  - TitleCase class names, enums, TypeScript types, TypeScript generics
+  - SCREAMING_SNAKE_CASE constants
+  - snake_case never
+  - Do not use a prefixing practice, such as iMyInterface, eMyEnum, cMyClass.
+  - Use verbs for functions (some exceptions, such as type narrowing functions like `isType(something)`)
+  - Use nouns for most data
+  - Use `isName` for booleans
+  - Use plural nouns for lists
+  - Exported names should especially not be too vague. E.g., export `createAudioNode` is more quickly understood in context than just an export named `create`.
 - Prefer feature packaging over layer packaging
 - Organize code with bundle-splitting in mind, especially in cases where specific library/framework bindings are created, such as for React, which should never be part of the main module. Core utilities can be exported from the main module. Imports from libraries that can be bundle-split should be, such as `lodash`.
 - Library dependencies should be minimal, within reason
