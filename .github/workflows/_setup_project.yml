@@ -7,6 +7,10 @@ jobs:
   setup_project_job:
     runs-on: ubuntu-latest
     steps:
+      - name: "Checkout Repository"
+        id: "checkout"
+        uses: actions/checkout@v3
+
       - name: "Determine Node Version from .nvmrc"
         id: "node-version"
         run: echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
