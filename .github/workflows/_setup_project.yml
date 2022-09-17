@@ -5,6 +5,7 @@ on:
 
 jobs:
   setup_project_job:
+    name: "Setup Project"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Repository"
