@@ -16,7 +16,11 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
-    "target": "ES6"
+    "target": "ES6",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"]
 }
