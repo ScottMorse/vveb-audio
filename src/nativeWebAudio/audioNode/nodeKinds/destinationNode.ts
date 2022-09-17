@@ -16,8 +16,3 @@ export const AUDIO_DESTINATION_NODES = {
     nodeKind: "destination",
   },
 } as const
-
-export type AudioDestinationNodeKeyName = keyof typeof AUDIO_DESTINATION_NODES
-export type AudioDestinationNodeConfig<
-  K extends AudioDestinationNodeKeyName = AudioDestinationNodeKeyName
-> = typeof AUDIO_DESTINATION_NODES[K]

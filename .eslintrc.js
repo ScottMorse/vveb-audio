@@ -17,7 +17,16 @@ module.exports = {
     "prefer-const": "error",
     "import/order": [
       "warn",
-      { alphabetize: { order: "asc", caseInsensitive: true } },
+      {
+        alphabetize: { order: "asc", caseInsensitive: true },
+        pathGroups: [
+          {
+            pattern: "@/**",
+            group: "external",
+            position: "after",
+          },
+        ],
+      },
     ],
   },
 }

@@ -44,8 +44,3 @@ export const AUDIO_EFFECT_NODES = {
     nodeKind: "effect",
   },
 } as const
-
-export type AudioEffectNodeKeyName = keyof typeof AUDIO_EFFECT_NODES
-export type AudioEffectNodeConfig<
-  K extends AudioEffectNodeKeyName = AudioEffectNodeKeyName
-> = typeof AUDIO_EFFECT_NODES[K]

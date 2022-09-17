@@ -4,9 +4,6 @@ import {
   ALL_AUDIO_NODES,
   AUDIO_NODES_BY_KIND,
   AudioNodeConfig,
-  DefaultAudioNodeKindFromKeyName,
-  AudioNodeClass,
-  AudioNodeClassOptions,
 } from "./audioNode"
 
 export type DefaultAbleAudioNodeKind = AudioNodeKind | "default"
@@ -38,14 +35,3 @@ export const getAudioNodeConfig = <
     : AUDIO_NODES_BY_KIND[nodeKind as AudioNodeKind][
         key as keyof typeof AUDIO_NODES_BY_KIND[AudioNodeKind]
       ] || (ALL_AUDIO_NODES as any)[key]
-
-export const createAudioNode = <
-  K extends AudioNodeKeyName<Kind>,
-  Kind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<K>
->(
-  key: K,
-  ctx: AudioContext,
-  options?: AudioNodeClassOptions<K, Kind>
-): InstanceType<AudioNodeClass<K, Kind>> => {
-  return new (getAudioNodeConfig(key).cls)(ctx, options as any) as any
-}
