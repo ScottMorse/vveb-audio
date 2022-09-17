@@ -8,4 +8,5 @@ jobs:
   setup_project:
     uses: ./.github/workflows/_setup_project.yml
   run_checks:
+    needs: setup_project
     uses: ./.github/workflows/_run_checks.yml
