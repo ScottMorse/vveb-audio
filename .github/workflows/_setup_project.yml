@@ -25,4 +25,9 @@ jobs:
         id: "install-deps"
         run: "npm ci"
 
-      - run: pwd && ls
+      - name: "Persist Project Between Jobs"
+        id: "persist-project"
+        uses: actions/upload-artifact@v3
+        with:
+          name: project
+          path: ./
