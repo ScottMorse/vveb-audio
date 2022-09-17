@@ -12,5 +12,8 @@ _I vvant to make a virtual audio processing graph_
 - Refinement of VirtualAudioGraph in general
 - Test coverage of VirtualAudioGraph
 - Support for custom AudioNode subclasses (requires extendible config in nativeWebAudio/audioNode and supporting types for TS module augmentation)
+- React bindings
 - Sandbox/demos
 - Build & publish process
+- Contribution docs
+- API docs
