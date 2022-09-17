@@ -7,6 +7,7 @@ jobs:
   run_checks:
     runs-on: ubuntu-latest
     steps:
+      - run: ls
       - name: "Run checks"
         id: "run-checks"
         run: "npm run check-all"

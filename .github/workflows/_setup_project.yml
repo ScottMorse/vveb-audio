@@ -24,3 +24,5 @@ jobs:
       - name: "Install Dependencies"
         id: "install-deps"
         run: "npm ci"
+
+      - run: ls
