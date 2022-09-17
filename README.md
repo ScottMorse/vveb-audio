@@ -27,7 +27,8 @@ An indirect aim of this project is to enhance the Web Audio development experien
 - Employ multi-paradigm style, with preference for pure functions
 - Use of `index.ts` is encouraged, but only for re-exporting (no new variables)
 - Prefer feature packaging over layer packaging
-- Organize code with bundle-splitting in mind, especially in cases where specific library/framework bindings are created, such as for React, which should never be part of the main module. Core utilities can be exported from the main module.
+- Organize code with bundle-splitting in mind, especially in cases where specific library/framework bindings are created, such as for React, which should never be part of the main module. Core utilities can be exported from the main module. Imports from libraries that can be bundle-split should be, such as `lodash`.
+- Library dependencies should be minimal, within reason
 - Prettier is used for automated formatting
 - ESLint is used for linting
 
