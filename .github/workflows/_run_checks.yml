@@ -5,8 +5,15 @@ on:
 
 jobs:
   run_checks:
+    name: "Run Checks"
     runs-on: ubuntu-latest
     steps:
+      - name: "Get Persisted Project"
+        id: get-project
+        uses: actions/cache@v3
+        with:
+          path: ./*
+          key: project-${{ github.sha }}
       - name: "Run checks"
         id: "run-checks"
         run: "npm run check-all"
