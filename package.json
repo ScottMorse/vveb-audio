@@ -3,8 +3,12 @@
   "version": "0.0.0-alpha",
   "author": "Scott Morse",
   "description": "A library on top of the Web Audio API for creating and rendering virtual audio processing graphs",
-  "main": "src/index.ts",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ScottMorse/vveb-audio"
+  },
+  "main": "src/index.ts",
   "scripts": {
     "lint": "npm-run-all lint:eslint lint:format",
     "lint:fix": "npm-run-all lint:eslint:fix lint:format:fix",
