@@ -1,11 +1,11 @@
 export type ConcreteConstructor<
   Args extends any[] = any[],
-  Instance extends any = any
+  Instance = any
 > = new (...args: Args) => Instance
 
 export type AbstractConstructor<
   Args extends any[] = any[],
-  Instance extends any = any
+  Instance = any
 > = abstract new (...args: Args) => Instance
 
 /**
@@ -14,7 +14,6 @@ export type AbstractConstructor<
  *  Note that this allows for either an abstract or concrete constructor,
  *  so separate types are available for only those.
  */
-export type Constructor<
-  Args extends any[] = any[],
-  Instance extends any = any
-> = ConcreteConstructor<Args, Instance> | AbstractConstructor<Args, Instance>
+export type Constructor<Args extends any[] = any[], Instance = any> =
+  | ConcreteConstructor<Args, Instance>
+  | AbstractConstructor<Args, Instance>
