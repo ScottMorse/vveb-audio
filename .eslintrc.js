@@ -2,8 +2,17 @@ const ALLOW_UNUSED_VARNAME_PATTERN = "^_"
 
 module.exports = {
   parser: "@typescript-eslint/parser",
-  plugins: ["eslint-plugin-import", "@typescript-eslint/eslint-plugin", "jest"],
+  extends: [
+    "eslint:recommended",
+    "plugin:jest/recommended",
+    "plugin:@typescript-eslint/recommended",
+  ],
+  env: {
+    node: true,
+  },
+  plugins: ["import", "@typescript-eslint", "jest"],
   rules: {
+    "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {
@@ -13,7 +22,7 @@ module.exports = {
         caughtErrorsIgnorePattern: ALLOW_UNUSED_VARNAME_PATTERN,
       },
     ],
-    "import/order": "warn",
+    eqeqeq: "error",
     "prefer-const": "error",
     "import/order": [
       "warn",

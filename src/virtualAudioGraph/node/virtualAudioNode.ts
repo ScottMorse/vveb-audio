@@ -28,7 +28,7 @@ export type VirtualAudioNodeOfKind<Kind extends AudioNodeKind> =
   VirtualAudioNode<AudioNodeKeyName<Kind>>
 
 export interface CreateVirtualAudioNodeRootOptions<
-  NodeKeyName extends AudioNodeKeyName<NodeKind>,
+  NodeKeyName extends AudioNodeKeyName<NodeKind> = any,
   NodeKind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<NodeKeyName>
 > {
   /** Reference to a specific AudioNode class */

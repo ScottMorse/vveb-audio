@@ -34,7 +34,9 @@ export const getVNodeByPath = (
   }
   if (nextPath[0] === "I") {
     const nextRoot = root.inputs[parseInt(nextPath.slice(1))]
-    return path.length == 1 ? nextRoot : getVNodeByPath(nextRoot, path.slice(1))
+    return path.length === 1
+      ? nextRoot
+      : getVNodeByPath(nextRoot, path.slice(1))
   }
   return null
 }

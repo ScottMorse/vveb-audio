@@ -58,7 +58,7 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
     return this._root
   }
 
-  constructor(root: CreateVirtualAudioNodeRootOptions<any>) {
+  constructor(root: CreateVirtualAudioNodeRootOptions) {
     super()
 
     const { node, lookupMap } = VirtualAudioNodeUtil.createRoot(root)
@@ -225,5 +225,5 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
 }
 
 export const createVirtualAudioGraph = (
-  root: CreateVirtualAudioNodeRootOptions<any>
+  root: CreateVirtualAudioNodeRootOptions
 ) => new VirtualAudioGraph(root)
