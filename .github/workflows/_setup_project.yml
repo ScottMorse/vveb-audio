@@ -25,4 +25,4 @@ jobs:
         id: "install-deps"
         run: "npm ci"
 
-      - run: ls
+      - run: pwd && ls
