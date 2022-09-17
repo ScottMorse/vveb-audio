@@ -1,4 +1,4 @@
-# vveb-audio 🧛
+# vveb-audio 🧛🎶
 
 _I vvant to make a virtual audio processing graph_
 
@@ -13,13 +13,15 @@ This is a very new project, so there is a lot of groundwork to be laid.
 The primary goal is to provide a library that allows a developer to
 create and manage a virtual [audio processing graph](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Basic_concepts_behind_Web_Audio_API#audio_graphs).
 
-This is built on top of the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), essentially providing a state layer directly above the Web Audio API, similar to a virtual DOM.
+This is built on top of the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API), essentially providing a state layer directly above it, similar to a [virtual DOM](https://en.wikipedia.org/wiki/Virtual_DOM).
 
 The virtual audio graph should be easily serializable to JSON, so a configuration can be sent or stored as plain text data.
 
 This should follow the rules of the Web Audio API, such as "A source node can take no input."
 
-An indirect aim of this project is to enhance the Web Audio development experience with TypeScript, providing types not supported by the underlying API that can enforce rules and provide more specific type narrowing, such as the categorization of AudioNodes into kinds **source**, **destination**, and **effect**.
+An indirect aim of this project is to enhance the Web Audio development experience with TypeScript, providing types not supported natively that can enforce rules and provide more specific type narrowing, such as the categorization of AudioNodes into kinds **source**, **destination**, and **effect**.
+
+This library should be fully extensible with custom AudioNode subclasses created by its users.
 
 ### Code Practices
 
