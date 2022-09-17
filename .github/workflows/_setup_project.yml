@@ -8,26 +8,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Repository"
-        id: "checkout"
+        id: checkout
         uses: actions/checkout@v3
 
       - name: "Determine Node Version from .nvmrc"
-        id: "node-version"
+        id: node-version
         run: echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
 
       - name: "Setup Node"
-        id: "setup-node"
+        id: setup-node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: "Install Dependencies"
-        id: "install-deps"
+        id: install-deps
         run: "npm ci"
 
       - name: "Persist Project Between Jobs"
-        id: "persist-project"
-        uses: actions/upload-artifact@v3
+        id: persist-project
+        uses: actions/cache@v3
         with:
-          name: project
-          path: ./
+          path: ./*
+          key: project-${{ github.sha }}
