@@ -1,6 +1,6 @@
 {
   "name": "vveb-audio",
-  "version": "0.0.0-alpha",
+  "version": "0.0.1-alpha",
   "author": "Scott Morse",
   "description": "A library on top of the Web Audio API for creating and rendering virtual audio processing graphs",
   "license": "MIT",
