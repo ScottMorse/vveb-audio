@@ -1,0 +1,12 @@
+name: Run Checks
+
+on:
+  workflow_call:
+
+jobs:
+  run_checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Run checks"
+        id: "run-checks"
+        run: "npm run check-all"

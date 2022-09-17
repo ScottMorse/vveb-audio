@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/github-workflow.json
+
+name: Verify Pull Request
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Setup Project"
+        uses: ./.github/workflows/_setup_project.yml
+
+      - name: "Run Checks"
+        uses: ./.github/workflows/_run_checks.yml
