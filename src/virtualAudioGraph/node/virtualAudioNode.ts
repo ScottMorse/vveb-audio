@@ -19,9 +19,6 @@ export interface VirtualAudioNode<
   node: NodeKeyName
   options: AudioNodeClassOptions<NodeKeyName, NodeKind>
   inputs: VirtualAudioNode<AudioNodeKeyName<"effect" | "source">>[]
-  destination?: NodeKeyName extends AudioNodeKeyName<"destination">
-    ? undefined
-    : VirtualAudioNode<AudioNodeKeyName<"effect" | "destination">>
 }
 
 export type VirtualAudioNodeOfKind<Kind extends AudioNodeKind> =
@@ -36,14 +33,9 @@ export interface CreateVirtualAudioNodeRootOptions<
   /** The args object passed to the AudioNode class's second parameter, if available */
   options?: AudioNodeClassOptions<NodeKeyName>
   /** A list of virtual nodes to create. These cannot be destination nodes, as they have 0 outputs */
-  inputs?: NodeKeyName extends AudioNodeKeyName<"source">
-    ? undefined
-    : CreateVirtualAudioNodeRootOptions<AudioNodeKeyName<"effect" | "source">>[]
-  destination?: NodeKeyName extends AudioNodeKeyName<"destination">
-    ? undefined
-    : CreateVirtualAudioNodeRootOptions<
-        AudioNodeKeyName<"destination" | "effect">
-      >
+  inputs?: NodeKeyName extends AudioNodeKeyName<"effect" | "destination">
+    ? CreateVirtualAudioNodeRootOptions<AudioNodeKeyName<"effect" | "source">>[]
+    : undefined
 }
 
 const _createVirtualAudioNode = <
@@ -58,35 +50,16 @@ const _createVirtualAudioNode = <
     id: nanoid(),
     node: options.node,
     options: (options?.options as any) || {},
-    destination: (options?.destination
-      ? _createVirtualAudioNode(options.destination, lookupMap, [...path, "D"])
-          .node
-      : undefined) as any,
     inputs: [],
   }
 
   if (options.inputs) {
-    node.inputs =
-      options?.inputs?.map((input, i) => ({
-        ..._createVirtualAudioNode(input, lookupMap, [...path, `I${i}`]).node,
-        destination: (input.destination ||
-          options.destination ||
-          node) as VirtualAudioNode<AudioNodeKeyName<"destination" | "effect">>,
-      })) || []
+    node.inputs = options?.inputs?.map(
+      (input, i) => _createVirtualAudioNode(input, lookupMap, [...path, i]).node
+    )
   }
 
   lookupMap[node.id] = { node, path }
-  if (
-    node.destination &&
-    (!lookupMap[node.destination.id] ||
-      path.length + 1 < lookupMap[node.destination.id].path.length)
-  ) {
-    lookupMap[node.destination.id] = {
-      node: node.destination,
-      path: [...path, "D"],
-    }
-  }
-
   return { node, lookupMap }
 }
 

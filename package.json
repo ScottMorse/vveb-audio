@@ -9,6 +9,9 @@
     "url": "https://github.com/ScottMorse/vveb-audio"
   },
   "main": "src/index.ts",
+  "workspaces": [
+    "./sandbox"
+  ],
   "scripts": {
     "lint": "npm-run-all lint:tsc lint:eslint lint:format",
     "lint:fix": "npm-run-all lint:eslint:fix lint:format:fix",

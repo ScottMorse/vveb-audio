@@ -9,19 +9,20 @@ export interface RenderedAudioNode<VNode extends VirtualAudioNode> {
   virtualNode: VNode
   audioNode: InstanceType<AudioNodeConfig<VNode["node"]>["cls"]>
   inputs: RenderedAudioNode<VirtualAudioNode>[]
-  destination?: VNode["node"] extends AudioNodeKeyName<"destination">
-    ? undefined
-    : RenderedAudioNode<VirtualAudioNode>
 }
 
 export const renderAudioNode = <VNode extends VirtualAudioNode>(
   vNode: VNode,
   context: AudioContext
-): RenderedAudioNode<VNode> => ({
-  virtualNode: vNode,
-  audioNode: createAudioNode(vNode.node, context, vNode.options),
-  inputs: vNode.inputs.map((input) => renderAudioNode(input, context)),
-  destination: (vNode.destination
-    ? renderAudioNode(vNode.destination, context)
-    : undefined) as any,
-})
+): RenderedAudioNode<VNode> => {
+  const audioNode = createAudioNode(vNode.node, context, vNode.options)
+  return {
+    virtualNode: vNode,
+    audioNode,
+    inputs: vNode.inputs.map((input) => {
+      const renderedInput = renderAudioNode(input, context)
+      renderedInput.audioNode.connect(audioNode)
+      return renderedInput
+    }),
+  }
+}

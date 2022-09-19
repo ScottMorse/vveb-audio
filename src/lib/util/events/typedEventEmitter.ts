@@ -1,4 +1,4 @@
-import { EventEmitter, Listener } from "events"
+import { EventEmitter } from "events"
 import { StringKeys } from "@/lib/util/types"
 
 type BaseEventConfig = { [key: string]: any }
@@ -47,9 +47,13 @@ interface _TypedEventEmitter<EventConfig extends BaseEventConfig> {
     event?: E
   ): _TypedEventEmitter<EventConfig>
 
-  rawListeners<E extends StringKeys<EventConfig>>(event: E): Listener[]
+  rawListeners<E extends StringKeys<EventConfig>>(
+    event: E
+  ): ReturnType<EventEmitter["rawListeners"]>[]
 
-  listeners<E extends StringKeys<EventConfig>>(event: E): Listener[]
+  listeners<E extends StringKeys<EventConfig>>(
+    event: E
+  ): ReturnType<EventEmitter["rawListeners"]>[]
 
   addListener: _TypedEventEmitter<EventConfig>["on"]
   removeListener: _TypedEventEmitter<EventConfig>["off"]

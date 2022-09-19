@@ -6,9 +6,7 @@
  */
 import { VirtualAudioNode } from "../virtualAudioNode"
 
-export type VNodePathId = "D" | `I${number}`
-
-export type VNodePath = VNodePathId[]
+export type VNodePath = number[]
 
 export type VNodeLookupMetadata = {
   node: VirtualAudioNode
@@ -28,12 +26,9 @@ export const getVNodeByPath = (
   root: VirtualAudioNode,
   path: VNodePath
 ): VirtualAudioNode | null => {
-  const [nextPath] = path
-  if (nextPath === "D") {
-    return root.destination ?? null
-  }
-  if (nextPath[0] === "I") {
-    const nextRoot = root.inputs[parseInt(nextPath.slice(1))]
+  if (path.length) {
+    const [nextPath] = path
+    const nextRoot = root.inputs[nextPath]
     return path.length === 1
       ? nextRoot
       : getVNodeByPath(nextRoot, path.slice(1))

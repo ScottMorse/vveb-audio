@@ -25,21 +25,6 @@ export interface VirtualAudioGraphEvents {
   updateDestination: { id: string; destination: VirtualAudioNode }
 }
 
-const deleteDestination = (node: VirtualAudioNode, id: string) => {
-  if (!node.destination) {
-    console.error(`Node '${id}' is not destination of parent`, {
-      node,
-    })
-    return null
-  }
-  const dest = node.destination
-
-  node.destination = undefined
-  delete node.destination
-
-  return dest
-}
-
 const deleteInput = (node: VirtualAudioNode, index: number, id: string) => {
   if (index >= node.inputs.length) {
     console.error(`Node '${id}' has no input at index ${index}`, { node })
@@ -118,32 +103,6 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
     })
   }
 
-  setDestination(
-    nodeId: string,
-    destination: CreateVirtualAudioNodeRootOptions<
-      AudioNodeKeyName<"effect" | "destination">
-    >
-  ) {
-    this.updateRoot((root) => {
-      const path = this.getNodePath(nodeId)
-      if (path === null) return
-
-      const parent = this.getNodeByPathAtRoot(root, path, nodeId)
-      if (!parent) return
-
-      if (parent.destination) {
-        this.deleteNode(parent.destination.id)
-      }
-
-      const { node, lookupMap } = VirtualAudioNodeUtil.createRoot(destination)
-      Object.assign(this.lookupMap, lookupMap)
-
-      parent.destination = node
-
-      this.emit("updateDestination", { id: nodeId, destination: node })
-    })
-  }
-
   deleteNode(nodeId: string) {
     this.updateRoot((root) => {
       const path = this.getNodePath(nodeId, true)
@@ -154,12 +113,10 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
 
       let deleted: VirtualAudioNode | null = null
       const [lastPath] = path.slice(-1)
-      if (lastPath === "D") {
-        deleted = deleteDestination(parent, nodeId)
-      } else if (lastPath[0] === "I") {
-        deleted = deleteInput(parent, parseInt(lastPath.slice(1)), nodeId)
+      if (typeof lastPath === "number") {
+        deleted = deleteInput(parent, lastPath, nodeId)
       } else {
-        console.error(`Unsupported path '${path}' for node '${nodeId}'`)
+        console.error(`No path left for node '${nodeId}'`)
       }
       if (deleted) this.deleteLookups(deleted)
     })
@@ -178,8 +135,6 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
       delete this.lookupMap[node.id]
       _idsDeleted.push(node.id)
     }
-    if (node.destination)
-      this.deleteLookups(node.destination, false, _idsDeleted)
 
     node.inputs.forEach((input) =>
       this.deleteLookups(input, false, _idsDeleted)
