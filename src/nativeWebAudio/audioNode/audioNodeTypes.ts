@@ -11,6 +11,9 @@ type AudioNodeMetadata<Name extends AudioNodeName = AudioNodeName> =
 export type AudioNodeClass<Name extends AudioNodeName = AudioNodeName> =
   AudioNodeMetadata<Name>["cls"]
 
+export type AudioNodeInstance<Name extends AudioNodeName = AudioNodeName> =
+  InstanceType<AudioNodeClass<Name>>
+
 export type AudioNodeKind<Name extends AudioNodeName = AudioNodeName> =
   ArrayItem<AudioNodeMetadata<Name>["kind"]>
 
@@ -25,6 +28,10 @@ export type AudioNodeNameByKind<Kind extends AudioNodeKind = AudioNodeKind> =
 
 export type AudioNodeClassByKind<Kind extends AudioNodeKind = AudioNodeKind> =
   AudioNodeMetadataByKind<Kind>["cls"]
+
+export type AudioNodeInstanceByKind<
+  Kind extends AudioNodeKind = AudioNodeKind
+> = InstanceType<AudioNodeClassByKind<Kind>>
 
 export type AudioNodeClassOptions<Name extends AudioNodeName = AudioNodeName> =
   ConstructorParameters<AudioNodeClass<Name>>[1] extends undefined
