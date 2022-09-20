@@ -1,5 +1,5 @@
 import { AudioNodeClassOptions, AudioNodeName } from "./audioNodeTypes"
-import { getAudioNodeConfig } from "./getAudioNodeConfig"
+import { getAudioNodeConfig } from "./audioNodeConfig"
 
 /** Instantiate an AudioNode by its key name */
 export const createAudioNode = <Name extends AudioNodeName>(

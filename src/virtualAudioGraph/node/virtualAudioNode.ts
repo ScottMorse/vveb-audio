@@ -3,58 +3,56 @@ import { nanoid } from "nanoid"
 import { DeeplyPartial } from "@/lib/util/types"
 import {
   AudioNodeClassOptions,
-  AudioNodeKeyName,
   AudioNodeKind,
-  DefaultAudioNodeKindFromKeyName,
+  AudioNodeName,
+  AudioNodeNameByKind,
   getAudioNodeConfig,
+  isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import { VNodeLookupMap, VNodePath } from "./internal/virtualAudioNode"
 
 /** An interface representing an AudioNode abstractly */
-export interface VirtualAudioNode<
-  NodeKeyName extends AudioNodeKeyName<NodeKind> = any,
-  NodeKind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<NodeKeyName>
-> {
+export interface VirtualAudioNode<Name extends AudioNodeName = AudioNodeName> {
   id: string
-  node: NodeKeyName
-  options: AudioNodeClassOptions<NodeKeyName, NodeKind>
-  inputs: VirtualAudioNode<AudioNodeKeyName<"effect" | "source">>[]
+  node: Name
+  options: AudioNodeClassOptions<Name>
+  inputs: Name extends AudioNodeNameByKind<"source">
+    ? []
+    : VirtualAudioNode<AudioNodeNameByKind<"effect" | "source">>[]
 }
 
 export type VirtualAudioNodeOfKind<Kind extends AudioNodeKind> =
-  VirtualAudioNode<AudioNodeKeyName<Kind>>
+  VirtualAudioNode<AudioNodeNameByKind<Kind>>
 
 export interface CreateVirtualAudioNodeRootOptions<
-  NodeKeyName extends AudioNodeKeyName<NodeKind> = any,
-  NodeKind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<NodeKeyName>
+  Name extends AudioNodeName = any
 > {
   /** Reference to a specific AudioNode class */
-  node: NodeKeyName
+  node: Name
   /** The args object passed to the AudioNode class's second parameter, if available */
-  options?: AudioNodeClassOptions<NodeKeyName>
+  options?: AudioNodeClassOptions<Name>
   /** A list of virtual nodes to create. These cannot be destination nodes, as they have 0 outputs */
-  inputs?: NodeKeyName extends AudioNodeKeyName<"effect" | "destination">
-    ? CreateVirtualAudioNodeRootOptions<AudioNodeKeyName<"effect" | "source">>[]
+  inputs?: Name extends AudioNodeNameByKind<"effect" | "destination">
+    ? CreateVirtualAudioNodeRootOptions<
+        AudioNodeNameByKind<"effect" | "source">
+      >[]
     : undefined
 }
 
-const _createVirtualAudioNode = <
-  NodeKeyName extends AudioNodeKeyName<NodeKind>,
-  NodeKind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<NodeKeyName>
->(
-  options: CreateVirtualAudioNodeRootOptions<NodeKeyName, NodeKind>,
+const _createVirtualAudioNode = <Name extends AudioNodeName>(
+  options: CreateVirtualAudioNodeRootOptions<Name>,
   lookupMap: VNodeLookupMap,
   path: VNodePath
-): { node: VirtualAudioNode<NodeKeyName>; lookupMap: VNodeLookupMap } => {
-  const node: VirtualAudioNode<NodeKeyName> = {
+): { node: VirtualAudioNode<Name>; lookupMap: VNodeLookupMap } => {
+  const node: VirtualAudioNode<Name> = {
     id: nanoid(),
     node: options.node,
     options: (options?.options as any) || {},
     inputs: [],
   }
 
-  if (options.inputs) {
-    node.inputs = options?.inputs?.map(
+  if (options.inputs && !isAudioNodeNameOfKind(options.node, "source")) {
+    ;(node.inputs as VirtualAudioNode[]) = options?.inputs?.map(
       (input, i) => _createVirtualAudioNode(input, lookupMap, [...path, i]).node
     )
   }
@@ -63,11 +61,8 @@ const _createVirtualAudioNode = <
   return { node, lookupMap }
 }
 
-const createRootVirtualAudioNode = <
-  NodeKeyName extends AudioNodeKeyName<NodeKind>,
-  NodeKind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<NodeKeyName>
->(
-  options: CreateVirtualAudioNodeRootOptions<NodeKeyName>
+const createRootVirtualAudioNode = <Name extends AudioNodeName>(
+  options: CreateVirtualAudioNodeRootOptions<Name>
 ) => _createVirtualAudioNode(options, {}, [])
 
 /** Merges new options in deeply (arrays overwrite the existing value) */
@@ -90,11 +85,11 @@ const updateNodeOptions = <Node extends VirtualAudioNode>(
  */
 const updateNodeType = <
   Node extends VirtualAudioNode,
-  NewNodeKeyName extends AudioNodeKeyName
+  NewName extends AudioNodeName
 >(
   node: Node,
-  newNodeType: NewNodeKeyName,
-  newOptions?: AudioNodeClassOptions<NewNodeKeyName, any>
+  newNodeType: NewName,
+  newOptions?: AudioNodeClassOptions<NewName>
 ) => ({
   ...node,
   node: newNodeType,
@@ -104,27 +99,16 @@ const updateNodeType = <
 const getNodeConfig = <Node extends VirtualAudioNode>(node: Node) =>
   getAudioNodeConfig(node.node)
 
-const isSourceNode = (
-  node: VirtualAudioNode
-): node is VirtualAudioNode<AudioNodeKeyName<"source">> =>
-  !!getAudioNodeConfig(node.node as any, "source")
+const isNodeKind = <Kind extends AudioNodeKind>(
+  node: VirtualAudioNode,
+  ...kind: Kind[]
+): node is VirtualAudioNodeOfKind<Kind> =>
+  isAudioNodeNameOfKind(node.node, ...kind)
 
-const isDestinationNode = (
-  node: VirtualAudioNode
-): node is VirtualAudioNode<AudioNodeKeyName<"destination">> =>
-  !!getAudioNodeConfig(node.node as any, "destination")
-
-const isEffectNode = (
-  node: VirtualAudioNode
-): node is VirtualAudioNode<AudioNodeKeyName<"effect">> =>
-  !!getAudioNodeConfig(node.node as any, "effect")
-
-export const VirtualAudioNodeUtil = {
+export const virtualAudioNodeUtil = {
   createRoot: createRootVirtualAudioNode,
   updateOptions: updateNodeOptions,
   updateType: updateNodeType,
   getConfig: getNodeConfig,
-  isSource: isSourceNode,
-  isDestination: isDestinationNode,
-  isEffect: isEffectNode,
+  isKind: isNodeKind,
 }

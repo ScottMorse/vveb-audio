@@ -18,7 +18,7 @@ export type AudioNodeKind<Name extends AudioNodeName = AudioNodeName> =
   ArrayItem<AudioNodeMetadata<Name>["kind"]>
 
 type AudioNodeMetadataByKind<Kind extends AudioNodeKind = AudioNodeKind> = {
-  [K in keyof AllNodes]: ArrayItem<AllNodes[K]["kind"]> extends Kind
+  [K in keyof AllNodes]: Kind extends ArrayItem<AllNodes[K]["kind"]>
     ? AllNodes[K] & { name: K }
     : never
 }[keyof AllNodes]

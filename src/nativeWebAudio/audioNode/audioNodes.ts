@@ -27,7 +27,10 @@ export const ALL_AUDIO_NODES = {
     cls: AnalyserNode,
     kind: ["destination", "effect"], // provides 0 or 1 outputs
   },
-
+  audio: {
+    cls: AudioNode,
+    kind: ["destination", "effect"], // like a no-op class, but does not have source node methods
+  },
   "biquad-filter": {
     cls: BiquadFilterNode,
     kind: ["effect"],

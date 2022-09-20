@@ -1,8 +1,4 @@
-import {
-  AudioNodeKeyName,
-  AudioNodeConfig,
-  createAudioNode,
-} from "@/nativeWebAudio"
+import { AudioName, AudioNodeConfig, createAudioNode } from "@/nativeWebAudio"
 import { VirtualAudioNode } from "./virtualAudioNode"
 
 export interface RenderedAudioNode<VNode extends VirtualAudioNode> {

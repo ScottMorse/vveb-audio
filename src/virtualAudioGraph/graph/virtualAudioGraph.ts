@@ -2,7 +2,7 @@ import { produce } from "immer"
 import { TypedEventEmitter } from "@/lib/util/events"
 import {
   AudioNodeClassOptions,
-  AudioNodeKeyName,
+  AudioName,
   AudioNodeKind,
   DefaultAudioNodeKindFromKeyName,
 } from "@/nativeWebAudio"
@@ -66,7 +66,7 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
    * ```
    */
   updateNodeOptions<
-    KeyName extends AudioNodeKeyName<Kind>,
+    KeyName extends AudioName<Kind>,
     Kind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<KeyName>
   >(nodeId: string, options: AudioNodeClassOptions<KeyName, Kind>) {
     this.updateRoot((root) => {
@@ -84,9 +84,7 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
 
   addInput(
     nodeId: string,
-    input: CreateVirtualAudioNodeRootOptions<
-      AudioNodeKeyName<"effect" | "source">
-    >
+    input: CreateVirtualAudioNodeRootOptions<AudioName<"effect" | "source">>
   ) {
     this.updateRoot((root) => {
       const path = this.getNodePath(nodeId)

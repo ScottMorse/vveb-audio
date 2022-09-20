@@ -12,6 +12,7 @@ module.exports = {
   },
   plugins: ["import", "@typescript-eslint", "jest"],
   rules: {
+    "@typescript-eslint/no-extra-semi": "off",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
