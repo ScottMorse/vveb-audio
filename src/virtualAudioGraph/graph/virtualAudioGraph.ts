@@ -2,14 +2,14 @@ import { produce } from "immer"
 import { TypedEventEmitter } from "@/lib/util/events"
 import {
   AudioNodeClassOptions,
-  AudioName,
   AudioNodeKind,
-  DefaultAudioNodeKindFromKeyName,
+  AudioNodeName,
+  AudioNodeNameByKind,
 } from "@/nativeWebAudio"
 import {
   CreateVirtualAudioNodeRootOptions,
   VirtualAudioNode,
-  VirtualAudioNodeUtil,
+  virtualAudioNodeUtil,
 } from "../node"
 import {
   getVNodeByPath,
@@ -46,7 +46,7 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
   constructor(root: CreateVirtualAudioNodeRootOptions) {
     super()
 
-    const { node, lookupMap } = VirtualAudioNodeUtil.createRoot(root)
+    const { node, lookupMap } = virtualAudioNodeUtil.createRoot(root)
     this._root = node
     this.lookupMap = lookupMap
   }
@@ -65,10 +65,10 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
    *
    * ```
    */
-  updateNodeOptions<
-    KeyName extends AudioName<Kind>,
-    Kind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<KeyName>
-  >(nodeId: string, options: AudioNodeClassOptions<KeyName, Kind>) {
+  updateNodeOptions<Name extends AudioNodeName>(
+    nodeId: string,
+    options: AudioNodeClassOptions<Name>
+  ) {
     this.updateRoot((root) => {
       const path = this.getNodePath(nodeId)
       if (path === null) return
@@ -76,15 +76,18 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
       const node = this.getNodeByPathAtRoot(root, path, nodeId)
       if (!node) return
 
-      node.options = VirtualAudioNodeUtil.updateOptions(node, options).options
+      node.options = virtualAudioNodeUtil.updateOptions(node, options).options
 
       this.emit("updateOptions", { id: nodeId, options: node.options })
     })
   }
 
+  /** @todo verify target node is not source */
   addInput(
     nodeId: string,
-    input: CreateVirtualAudioNodeRootOptions<AudioName<"effect" | "source">>
+    input: CreateVirtualAudioNodeRootOptions<
+      AudioNodeNameByKind<"effect" | "source">
+    >
   ) {
     this.updateRoot((root) => {
       const path = this.getNodePath(nodeId)
@@ -93,9 +96,10 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
       const parent = this.getNodeByPathAtRoot(root, path, nodeId)
       if (!parent) return
 
-      const { node, lookupMap } = VirtualAudioNodeUtil.createRoot(input)
+      const { node, lookupMap } = virtualAudioNodeUtil.createRoot(input)
+
       Object.assign(this.lookupMap, lookupMap)
-      parent.inputs.push(node)
+      ;(parent.inputs as any).push(node)
 
       this.emit("addInput", { id: nodeId, input: node })
     })
