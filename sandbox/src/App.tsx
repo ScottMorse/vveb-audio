@@ -27,7 +27,9 @@ export const App = () => {
     if (isPlaying) {
       if (renderedNode) {
         renderedNode.inputs.forEach((input) => {
-          input.audioNode.start() /** @todo this type is erroneously any-ed */
+          if (input.audioNode instanceof OscillatorNode) {
+            input.audioNode.start()
+          }
         })
       } else {
         const ctx =
@@ -40,7 +42,9 @@ export const App = () => {
       }
     } else {
       renderedNode?.inputs.forEach((input) => {
-        input.audioNode.stop() /** @todo this type is erroneously any-ed */
+        if (input.audioNode instanceof OscillatorNode) {
+          input.audioNode.stop()
+        }
       })
       setRenderedNode(null)
     }
