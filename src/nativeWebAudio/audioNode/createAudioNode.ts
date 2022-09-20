@@ -1,20 +1,9 @@
-import {
-  AudioNodeClass,
-  AudioNodeClassOptions,
-  AudioNodeKeyName,
-  AudioNodeKind,
-  DefaultAudioNodeKindFromKeyName,
-} from "./audioNode"
+import { AudioNodeClassOptions, AudioNodeName } from "./audioNodeTypes"
 import { getAudioNodeConfig } from "./getAudioNodeConfig"
 
 /** Instantiate an AudioNode by its key name */
-export const createAudioNode = <
-  K extends AudioNodeKeyName<Kind>,
-  Kind extends AudioNodeKind = DefaultAudioNodeKindFromKeyName<K>
->(
-  key: K,
+export const createAudioNode = <Name extends AudioNodeName>(
+  name: Name,
   ctx: AudioContext,
-  options?: AudioNodeClassOptions<K, Kind>
-): InstanceType<AudioNodeClass<K, Kind>> => {
-  return new (getAudioNodeConfig(key).cls)(ctx, options as any) as any
-}
+  options: AudioNodeClassOptions<Name>
+) => new (getAudioNodeConfig(name).cls)(ctx, options as any)
