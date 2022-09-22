@@ -4,7 +4,7 @@ import {
   AudioNodeClassOptions,
   AudioNodeKind,
   AudioNodeName,
-  AudioNodeNameByKind,
+  AudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import {
   CreateVirtualAudioNodeRootOptions,
@@ -86,7 +86,7 @@ export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents
   addInput(
     nodeId: string,
     input: CreateVirtualAudioNodeRootOptions<
-      AudioNodeNameByKind<"effect" | "source">
+      AudioNodeNameOfKind<"effect" | "source">
     >
   ) {
     this.updateRoot((root) => {

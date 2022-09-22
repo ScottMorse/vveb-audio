@@ -17,21 +17,21 @@ export type AudioNodeInstance<Name extends AudioNodeName = AudioNodeName> =
 export type AudioNodeKind<Name extends AudioNodeName = AudioNodeName> =
   ArrayItem<AudioNodeMetadata<Name>["kind"]>
 
-type AudioNodeMetadataByKind<Kind extends AudioNodeKind = AudioNodeKind> = {
+type AudioNodeMetadataOfKind<Kind extends AudioNodeKind = AudioNodeKind> = {
   [K in keyof AllNodes]: Kind extends ArrayItem<AllNodes[K]["kind"]>
     ? AllNodes[K] & { name: K }
     : never
 }[keyof AllNodes]
 
-export type AudioNodeNameByKind<Kind extends AudioNodeKind = AudioNodeKind> =
-  AudioNodeMetadataByKind<Kind>["name"]
+export type AudioNodeNameOfKind<Kind extends AudioNodeKind = AudioNodeKind> =
+  AudioNodeMetadataOfKind<Kind>["name"]
 
-export type AudioNodeClassByKind<Kind extends AudioNodeKind = AudioNodeKind> =
-  AudioNodeMetadataByKind<Kind>["cls"]
+export type AudioNodeClassOfKind<Kind extends AudioNodeKind = AudioNodeKind> =
+  AudioNodeMetadataOfKind<Kind>["cls"]
 
-export type AudioNodeInstanceByKind<
+export type AudioNodeInstanceOfKind<
   Kind extends AudioNodeKind = AudioNodeKind
-> = InstanceType<AudioNodeClassByKind<Kind>>
+> = InstanceType<AudioNodeClassOfKind<Kind>>
 
 export type AudioNodeClassOptions<Name extends AudioNodeName = AudioNodeName> =
   ConstructorParameters<AudioNodeClass<Name>>[1] extends undefined

@@ -3,7 +3,7 @@ import { ALL_AUDIO_NODES } from "./audioNodes"
 import {
   AudioNodeKind,
   AudioNodeName,
-  AudioNodeNameByKind,
+  AudioNodeNameOfKind,
 } from "./audioNodeTypes"
 
 /**
@@ -20,7 +20,7 @@ export const getAudioNodeConfig = <Name extends AudioNodeName>(name: Name) => {
 export const isAudioNodeNameOfKind = <Kind extends AudioNodeKind>(
   name: AudioNodeName,
   ...kind: Kind[]
-): name is AudioNodeNameByKind<Kind> =>
+): name is AudioNodeNameOfKind<Kind> =>
   intersection(
     (getAudioNodeConfig(name)?.kind || []) as readonly AudioNodeKind[],
     kind

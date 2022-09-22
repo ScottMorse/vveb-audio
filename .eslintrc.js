@@ -1,3 +1,4 @@
+/* eslint-env node */ // Patches VSCode issue with linting this file as browser JS
 const ALLOW_UNUSED_VARNAME_PATTERN = "^_"
 
 module.exports = {
@@ -8,7 +9,8 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
   ],
   env: {
-    node: true,
+    browser: true,
+    es6: true,
   },
   plugins: ["import", "@typescript-eslint", "jest"],
   rules: {

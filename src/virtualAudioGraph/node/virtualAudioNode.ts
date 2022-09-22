@@ -5,7 +5,7 @@ import {
   AudioNodeClassOptions,
   AudioNodeKind,
   AudioNodeName,
-  AudioNodeNameByKind,
+  AudioNodeNameOfKind,
   getAudioNodeConfig,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
@@ -16,13 +16,13 @@ export interface VirtualAudioNode<Name extends AudioNodeName = AudioNodeName> {
   id: string
   node: Name
   options: AudioNodeClassOptions<Name>
-  inputs: Name extends AudioNodeNameByKind<"source">
+  inputs: Name extends AudioNodeNameOfKind<"source">
     ? []
-    : VirtualAudioNode<AudioNodeNameByKind<"effect" | "source">>[]
+    : VirtualAudioNode<AudioNodeNameOfKind<"effect" | "source">>[]
 }
 
 export type VirtualAudioNodeOfKind<Kind extends AudioNodeKind> =
-  VirtualAudioNode<AudioNodeNameByKind<Kind>>
+  VirtualAudioNode<AudioNodeNameOfKind<Kind>>
 
 export interface CreateVirtualAudioNodeRootOptions<
   Name extends AudioNodeName = any
@@ -32,9 +32,9 @@ export interface CreateVirtualAudioNodeRootOptions<
   /** The args object passed to the AudioNode class's second parameter, if available */
   options?: AudioNodeClassOptions<Name>
   /** A list of virtual nodes to create. These cannot be destination nodes, as they have 0 outputs */
-  inputs?: Name extends AudioNodeNameByKind<"effect" | "destination">
+  inputs?: Name extends AudioNodeNameOfKind<"effect" | "destination">
     ? CreateVirtualAudioNodeRootOptions<
-        AudioNodeNameByKind<"effect" | "source">
+        AudioNodeNameOfKind<"effect" | "source">
       >[]
     : undefined
 }
