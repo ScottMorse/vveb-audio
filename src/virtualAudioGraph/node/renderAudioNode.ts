@@ -1,9 +1,9 @@
 import { AudioNodeInstance, createAudioNode } from "@/nativeWebAudio"
-import { VirtualAudioNode } from "./virtualAudioNode"
+import { VirtualAudioNode } from "./virtualAudioNode/virtualAudioNode"
 
 export interface RenderedAudioNode<VNode extends VirtualAudioNode> {
   virtualNode: VNode
-  audioNode: AudioNodeInstance<VNode["node"]>
+  audioNode: AudioNodeInstance<VNode["name"]>
   inputs: RenderedAudioNode<VirtualAudioNode>[]
 }
 
@@ -12,10 +12,10 @@ export const renderAudioNode = <VNode extends VirtualAudioNode>(
   context: AudioContext
 ): RenderedAudioNode<VNode> => {
   const audioNode = createAudioNode(
-    vNode.node,
+    vNode.name,
     context,
     vNode.options
-  ) as AudioNodeInstance<VNode["node"]>
+  ) as AudioNodeInstance<VNode["name"]>
 
   return {
     virtualNode: vNode,

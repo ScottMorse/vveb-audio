@@ -9,7 +9,8 @@ import { VirtualAudioNode } from "../virtualAudioNode"
 export type VNodePath = number[]
 
 export type VNodeLookupMetadata = {
-  parentId: string
+  rootId: string
+  parentId: string | null
   node: VirtualAudioNode
   path: VNodePath
 }

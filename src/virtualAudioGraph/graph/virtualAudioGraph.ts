@@ -15,7 +15,7 @@ import {
   getVNodeByPath,
   VNodeLookupMap,
   VNodePath,
-} from "../node/internal/virtualAudioNode"
+} from "../node/virtualAudioNode/internal/virtualAudioNode"
 
 export interface VirtualAudioGraphEvents {
   root: VirtualAudioNode
