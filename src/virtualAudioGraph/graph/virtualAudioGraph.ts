@@ -1,186 +1,56 @@
-import { produce } from "immer"
-import { TypedEventEmitter } from "@/lib/util/events"
-import {
-  AudioNodeClassOptions,
-  AudioNodeKind,
-  AudioNodeName,
-  AudioNodeNameOfKind,
-} from "@/nativeWebAudio"
+import { nanoid } from "nanoid"
+import { AudioNodeName } from "@/nativeWebAudio"
 import {
   CreateVirtualAudioNodeRootOptions,
   VirtualAudioNode,
   virtualAudioNodeUtil,
 } from "../node"
-import {
-  getVNodeByPath,
-  VNodeLookupMap,
-  VNodePath,
-} from "../node/virtualAudioNode/internal/virtualAudioNode"
+import { NodeLookupMap } from "./lookupMap"
+import { VirtualAudioGraphNode } from "./virtualAudioGraphNode"
 
-export interface VirtualAudioGraphEvents {
-  root: VirtualAudioNode
-  deleteNodes: string[]
-  addInput: { id: string; input: VirtualAudioNode }
-  updateOptions: { id: string; options: AudioNodeClassOptions<any> }
-  updateDestination: { id: string; destination: VirtualAudioNode }
-}
-
-const deleteInput = (node: VirtualAudioNode, index: number, id: string) => {
-  if (index >= node.inputs.length) {
-    console.error(`Node '${id}' has no input at index ${index}`, { node })
-    return null
+export class VirtualAudioGraph {
+  get id() {
+    return this._id
   }
 
-  const input = node.inputs[index]
-
-  node.inputs.splice(index, 1)
-
-  return input
-}
-
-export class VirtualAudioGraph extends TypedEventEmitter<VirtualAudioGraphEvents> {
-  public get root() {
-    return this._root
+  get roots() {
+    return this._roots
   }
 
-  constructor(root: CreateVirtualAudioNodeRootOptions) {
-    super()
-
-    const { node, lookupMap } = virtualAudioNodeUtil.createRoot(root)
-    this._root = node
-    this.lookupMap = lookupMap
+  getNode(nodeId: string, warn = false) {
+    const node = this.lookupMap[nodeId]
+    if (warn && !node)
+      console.warn(
+        `Node ID '${nodeId}' in graph '${this.id}'`
+      ) /** @todo verbosity-configurable logger */
+    return node || null
   }
 
-  /**
-   * For the generic type, pass the key name representing the
-   * audio class that you are expect to update the options for
-   * (same as `node` name option used when first constructing the
-   * `VirtualAudioGraph`)
-   *
-   * ```@example
-   * const graph = new VirtualAudioGraph({
-   *  node: 'gain',
-   * })
-   *
-   *
-   * ```
-   */
-  updateNodeOptions<Name extends AudioNodeName>(
-    nodeId: string,
-    options: AudioNodeClassOptions<Name>
-  ) {
-    this.updateRoot((root) => {
-      const path = this.getNodePath(nodeId)
-      if (path === null) return
-
-      const node = this.getNodeByPathAtRoot(root, path, nodeId)
-      if (!node) return
-
-      node.options = virtualAudioNodeUtil.updateOptions(node, options).options
-
-      this.emit("updateOptions", { id: nodeId, options: node.options })
-    })
-  }
-
-  /** @todo verify target node is not source */
-  addInput(
-    nodeId: string,
-    input: CreateVirtualAudioNodeRootOptions<
-      AudioNodeNameOfKind<"effect" | "source">
-    >
-  ) {
-    this.updateRoot((root) => {
-      const path = this.getNodePath(nodeId)
-      if (path === null) return
-
-      const parent = this.getNodeByPathAtRoot(root, path, nodeId)
-      if (!parent) return
-
-      const { node, lookupMap } = virtualAudioNodeUtil.createRoot(input)
-
-      Object.assign(this.lookupMap, lookupMap)
-      ;(parent.inputs as any).push(node)
-
-      this.emit("addInput", { id: nodeId, input: node })
-    })
-  }
-
-  deleteNode(nodeId: string) {
-    this.updateRoot((root) => {
-      const path = this.getNodePath(nodeId, true)
-      if (path === null) return
-
-      const parent = this.getNodeByPathAtRoot(root, path.slice(0, -1), nodeId)
-      if (!parent) return
-
-      let deleted: VirtualAudioNode | null = null
-      const [lastPath] = path.slice(-1)
-      if (typeof lastPath === "number") {
-        deleted = deleteInput(parent, lastPath, nodeId)
-      } else {
-        console.error(`No path left for node '${nodeId}'`)
-      }
-      if (deleted) this.deleteLookups(deleted)
-    })
-  }
-
-  getNode(nodeId: string) {
-    return this.lookupMap[nodeId]?.node ?? null
-  }
-
-  private deleteLookups(
-    node: VirtualAudioNode,
-    _first = true,
-    _idsDeleted: string[] = []
-  ) {
-    if (this.lookupMap[node.id]) {
-      delete this.lookupMap[node.id]
-      _idsDeleted.push(node.id)
+  deleteNode(nodeId: string, warn = false) {
+    const node = this.getNode(nodeId, warn)
+    if (node?.destroy() && !node.parent) {
+      this.deleteRoot(nodeId)
     }
+  }
 
-    node.inputs.forEach((input) =>
-      this.deleteLookups(input, false, _idsDeleted)
+  constructor(roots: CreateVirtualAudioNodeRootOptions<AudioNodeName, true>[]) {
+    this._roots = roots.map((root) => {
+      const { node } = virtualAudioNodeUtil.createRoot(root)
+      this._rawRoots.push(node)
+      return new VirtualAudioGraphNode(node, this.lookupMap)
+    })
+  }
+
+  private deleteRoot(rootId: string) {
+    const index = this._roots.findIndex(
+      ({ virtualNode: { id } }) => id === rootId
     )
-
-    if (_first) this.emit("deleteNodes", _idsDeleted)
-    return _idsDeleted
+    this._roots.splice(index, 1)
+    this._rawRoots.splice(index, 1)
   }
 
-  private getNodeByPathAtRoot(
-    root: VirtualAudioNode,
-    path: VNodePath,
-    id: string
-  ) {
-    const node = getVNodeByPath(root, path)
-    if (!node) {
-      console.warn(`Node '${id}' not found at path`, { path })
-    }
-    return node
-  }
-
-  private getNodePath(nodeId: string, disallowRoot = false) {
-    let path = this.lookupMap[nodeId]?.path ?? null
-    if (path === null) {
-      console.warn(`Node with id '${nodeId}' not found`)
-    }
-    if ((disallowRoot && path?.length === 0) || nodeId === this.root.id) {
-      console.error(
-        `This operation is not allowed on the root node '${nodeId}'`
-      )
-      path = null
-    }
-    return path
-  }
-
-  private updateRoot(mutateDraft: (draft: VirtualAudioNode) => void) {
-    this._root = produce(this._root, mutateDraft)
-    this.emit("root", this._root)
-  }
-
-  private lookupMap: VNodeLookupMap<true>
-  private _root: VirtualAudioNode
+  private _id = nanoid()
+  private _roots: VirtualAudioGraphNode[]
+  private _rawRoots: VirtualAudioNode<AudioNodeName, true>[] = []
+  private lookupMap: NodeLookupMap = {}
 }
-
-export const createVirtualAudioGraph = (
-  root: CreateVirtualAudioNodeRootOptions
-) => new VirtualAudioGraph(root)

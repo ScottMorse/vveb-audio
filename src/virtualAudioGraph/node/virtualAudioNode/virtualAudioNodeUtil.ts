@@ -6,59 +6,61 @@ import {
   AudioNodeClassOptions,
   AudioNodeKind,
   AudioNodeName,
+  AudioNodeNameOfKind,
   getAudioNodeConfig,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import { ALL_AUDIO_NODES } from "@/nativeWebAudio/audioNode/audioNodes"
-import { VNodeLookupMap, VNodePath } from "./internal/virtualAudioNode"
 import {
   CreateVirtualAudioNodeRootOptions,
   VirtualAudioNode,
   VirtualAudioNodeOfKind,
 } from "./virtualAudioNode"
 
-interface CreateVirtualAudioNodeInternalOptions<Name extends AudioNodeName> {
-  options: CreateVirtualAudioNodeRootOptions<Name>
-  lookupMap: VNodeLookupMap
-  path: VNodePath
-  parentId: string | null
+interface CreateVirtualAudioNodeInternalOptions<
+  Name extends AudioNodeName,
+  IsRoot extends boolean = true
+> {
+  options: CreateVirtualAudioNodeRootOptions<Name, IsRoot>
   rootId?: string
 }
 
 const _createVirtualAudioNode = <Name extends AudioNodeName>({
   options,
-  lookupMap,
-  path,
-  parentId,
   rootId,
-}: CreateVirtualAudioNodeInternalOptions<Name>): {
+}: CreateVirtualAudioNodeInternalOptions<Name, boolean>): {
   node: VirtualAudioNode<Name>
-  lookupMap: VNodeLookupMap
+  destination: VirtualAudioNodeOfKind<"destination">
 } => {
+  const destination = (
+    options.destination
+      ? _createVirtualAudioNode({ options: options.destination as any, rootId })
+          .node
+      : undefined
+  ) as any
+
   const node: VirtualAudioNode<Name> = {
     id: nanoid(),
     name: options.name,
+    isRoot: !rootId,
     options: (options?.options as any) || {},
     inputs: [],
+    destination,
   }
 
   const resolvedRootId = rootId || node.id
 
   if (options.inputs && !isAudioNodeNameOfKind(options.name, "source")) {
     ;(node.inputs as VirtualAudioNode[]) = options?.inputs?.map(
-      (input, i) =>
+      (input) =>
         _createVirtualAudioNode({
           options: input,
-          lookupMap,
-          path: [...path, i],
-          parentId: node.id,
           rootId: resolvedRootId,
         }).node
     )
   }
 
-  lookupMap[node.id] = { node, path, parentId, rootId: resolvedRootId }
-  return { node, lookupMap }
+  return { node, destination }
 }
 
 /** @todo doc and test */
@@ -67,10 +69,10 @@ const createRootVirtualAudioNode = <Name extends AudioNodeName>(
 ) =>
   _createVirtualAudioNode({
     options,
-    lookupMap: {},
-    parentId: null,
-    path: [],
-  })
+  }) as {
+    node: VirtualAudioNode<Name, true>
+    destination?: VirtualAudioNodeOfKind<"destination", false>
+  }
 
 /** Merges new options in deeply (arrays overwrite the existing value) */
 const updateNodeOptions = <Node extends VirtualAudioNode>(
