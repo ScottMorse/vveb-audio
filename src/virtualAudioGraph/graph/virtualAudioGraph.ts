@@ -36,7 +36,7 @@ export class VirtualAudioGraph {
   constructor(roots: CreateVirtualAudioNodeRootOptions<AudioNodeName, true>[]) {
     this._roots = roots.map((root) => {
       const { node } = virtualAudioNodeUtil.createRoot(root)
-      this._rawRoots.push(node)
+      this.rawRoots.push(node)
       return new VirtualAudioGraphNode(node, this.lookupMap)
     })
   }
@@ -46,11 +46,15 @@ export class VirtualAudioGraph {
       ({ virtualNode: { id } }) => id === rootId
     )
     this._roots.splice(index, 1)
-    this._rawRoots.splice(index, 1)
+    this.rawRoots.splice(index, 1)
   }
 
   private _id = nanoid()
   private _roots: VirtualAudioGraphNode[]
-  private _rawRoots: VirtualAudioNode<AudioNodeName, true>[] = []
+  private rawRoots: VirtualAudioNode<AudioNodeName, true>[] = []
   private lookupMap: NodeLookupMap = {}
 }
+
+export const createVirtualAudioGraph = (
+  roots: CreateVirtualAudioNodeRootOptions<AudioNodeName, true>[]
+) => new VirtualAudioGraph(roots)
