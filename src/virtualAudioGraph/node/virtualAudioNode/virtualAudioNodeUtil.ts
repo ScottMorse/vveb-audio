@@ -6,73 +6,205 @@ import {
   AudioNodeClassOptions,
   AudioNodeKind,
   AudioNodeName,
-  AudioNodeNameOfKind,
   getAudioNodeConfig,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import { ALL_AUDIO_NODES } from "@/nativeWebAudio/audioNode/audioNodes"
 import {
-  CreateVirtualAudioNodeRootOptions,
+  CreateVirtualAudioNodeInput,
+  CreateVirtualAudioNodeOptions,
   VirtualAudioNode,
   VirtualAudioNodeOfKind,
 } from "./virtualAudioNode"
 
-interface CreateVirtualAudioNodeInternalOptions<
-  Name extends AudioNodeName,
-  IsRoot extends boolean = true
-> {
-  options: CreateVirtualAudioNodeRootOptions<Name, IsRoot>
-  rootId?: string
+export interface VirtualAudioNodeReference {
+  idRef: string
 }
 
-const _createVirtualAudioNode = <Name extends AudioNodeName>({
+export type CreateVirtualAudioNodeOptionsOrReference<
+  Name extends AudioNodeName = AudioNodeName
+> = CreateVirtualAudioNodeOptions<Name> | VirtualAudioNodeReference
+
+type OrphanedReference = VirtualAudioNodeReference & { parentId: string }
+
+interface CreateVirtualAudioNodeInternalOptions<
+  Name extends AudioNodeName,
+  Options extends CreateVirtualAudioNodeOptionsOrReference<Name>
+> {
+  options: Options
+  rootId?: string
+  parentId?: string
+  idMap?: Record<string, VirtualAudioNode | VirtualAudioNodeReference>
+  orphanedReferences?: OrphanedReference[]
+}
+
+const isVirtualAudioNodeReference = (
+  options: any
+): options is VirtualAudioNodeReference => typeof options?.idRef === "string"
+
+/** @todo i need to be broken up and refactored */
+const createVirtualAudioNode = <
+  Options extends CreateVirtualAudioNodeOptionsOrReference<Name>,
+  Name extends AudioNodeName = AudioNodeName
+>({
   options,
   rootId,
-}: CreateVirtualAudioNodeInternalOptions<Name, boolean>): {
-  node: VirtualAudioNode<Name>
-  destination: VirtualAudioNodeOfKind<"destination">
-} => {
-  const destination = (
-    options.destination
-      ? _createVirtualAudioNode({ options: options.destination as any, rootId })
-          .node
-      : undefined
-  ) as any
+  parentId = "",
+  idMap = {},
+  orphanedReferences = [],
+}: CreateVirtualAudioNodeInternalOptions<
+  Name,
+  Options
+>): Options extends VirtualAudioNodeReference
+  ? VirtualAudioNode<Name> | VirtualAudioNodeReference
+  : VirtualAudioNode<Name> => {
+  if (isVirtualAudioNodeReference(options)) {
+    const node = idMap[options.idRef]
+    if (!node) {
+      orphanedReferences.push({
+        ...options,
+        parentId: parentId || (rootId as string),
+      })
+      return options as any
+    }
+    return node as any
+  }
 
   const node: VirtualAudioNode<Name> = {
-    id: nanoid(),
+    id: options.id || nanoid(),
     name: options.name,
-    isRoot: !rootId,
     options: (options?.options as any) || {},
     inputs: [],
-    destination,
   }
 
   const resolvedRootId = rootId || node.id
 
   if (options.inputs && !isAudioNodeNameOfKind(options.name, "source")) {
-    ;(node.inputs as VirtualAudioNode[]) = options?.inputs?.map(
-      (input) =>
-        _createVirtualAudioNode({
-          options: input,
-          rootId: resolvedRootId,
-        }).node
+    ;(node.inputs as any[]) = options?.inputs?.map((input) =>
+      createVirtualAudioNode({
+        options: input,
+        rootId: resolvedRootId,
+        idMap,
+        orphanedReferences,
+      })
     )
   }
 
-  return { node, destination }
+  idMap[node.id] = node
+
+  const canHydrateReference = () => {
+    if (!options.id) return false // only should reference manually ID'd nodes since relies on references created before the graph is constructed
+    const index = orphanedReferences.findIndex(({ idRef }) => idRef === node.id)
+    if (index > -1) {
+      const orphan = orphanedReferences[index]
+      const parent = idMap[orphan.parentId]
+      return isVirtualAudioNode(parent)
+    }
+    return false
+  }
+
+  while (canHydrateReference()) {
+    const index = orphanedReferences.findIndex(({ idRef }) => idRef === node.id)
+    const ref = orphanedReferences[index]
+
+    const parent = idMap[ref.parentId] as VirtualAudioNodeOfKind<
+      "destination" | "effect"
+    > // canHydrateReference confirms the parent is not a reference
+    const parentInputIndex = parent.inputs.findIndex(
+      (input) => (input as any as VirtualAudioNodeReference).idRef === ref.idRef
+    )
+
+    const nodeKind = getAudioNodeConfig(node.name).kind
+    if (nodeKind.length === 1 && nodeKind[0] === "source") {
+      /** @todo maybe should be configurable on AudioNodeName basis with more AudioNodeConfig metadata about input/output constraints */
+      console.warn(
+        `A source node cannot have an input (node ID ref: '${node.id}')`
+      )
+      parent.inputs.splice(parentInputIndex, 1)
+    } else {
+      parent.inputs.splice(
+        parentInputIndex,
+        1,
+        node as VirtualAudioNodeOfKind<"source" | "effect">
+      )
+    }
+
+    orphanedReferences.splice(index, 1)
+  }
+
+  if (node.id === resolvedRootId) {
+    for (const nodeId of orphanedReferences) {
+      console.warn(`Node idRef '${nodeId}' was not found in the graph`)
+    }
+  }
+
+  return node
 }
+
+export const DEFAULT_DESTINATION_ID = "default-destination"
+
+const DEFAULT_DESTINATION_NODE = {
+  id: DEFAULT_DESTINATION_ID,
+  name: "audio-destination",
+  options: undefined,
+} as const
+
+type CreateDefaultDestinationOptions = { defaultDestination: true } & Pick<
+  CreateVirtualAudioNodeOptions<"audio-destination">,
+  "inputs"
+>
+
+const createDefaultDestinationNode = (
+  inputs?: CreateVirtualAudioNodeInput[]
+): VirtualAudioNode<"audio-destination"> =>
+  createVirtualAudioNode({
+    options: {
+      ...DEFAULT_DESTINATION_NODE,
+      inputs:
+        inputs?.map((input) =>
+          createVirtualAudioNode({
+            options: input,
+            rootId: DEFAULT_DESTINATION_ID,
+          })
+        ) || [],
+    },
+  })
+
+export type CreateRootOptions<Name extends AudioNodeName> =
+  | CreateDefaultDestinationOptions
+  | (CreateVirtualAudioNodeOptions<Name> & {
+      defaultDestination?: never
+    })
+
+const isDefaultDestination = (
+  options: CreateRootOptions<AudioNodeName>
+): options is CreateDefaultDestinationOptions =>
+  !!(options as CreateDefaultDestinationOptions).defaultDestination
 
 /** @todo doc and test */
 const createRootVirtualAudioNode = <Name extends AudioNodeName>(
-  options: CreateVirtualAudioNodeRootOptions<Name>
-) =>
-  _createVirtualAudioNode({
-    options,
-  }) as {
-    node: VirtualAudioNode<Name, true>
-    destination?: VirtualAudioNodeOfKind<"destination", false>
-  }
+  options: CreateRootOptions<Name>
+): typeof options extends CreateDefaultDestinationOptions
+  ? VirtualAudioNode<"audio-destination">
+  : VirtualAudioNode<Name> =>
+  isDefaultDestination(options)
+    ? createDefaultDestinationNode(options.inputs)
+    : (createVirtualAudioNode({
+        options: {
+          ...options,
+          inputs: (getAudioNodeConfig(options.name).kind.includes("source")
+            ? (() => {
+                console.warn("Source nodes should not have inputs")
+                return []
+              })()
+            : options.inputs) as any,
+        },
+      }) as any)
+
+/** Simply a pass through to check type of input more strongly */
+export const createVirtualAudioInput = <Name extends AudioNodeName>(
+  inputOptions: CreateVirtualAudioNodeOptions<Name>
+) => inputOptions
 
 /** Merges new options in deeply (arrays overwrite the existing value) */
 const updateNodeOptions = <Node extends VirtualAudioNode>(
