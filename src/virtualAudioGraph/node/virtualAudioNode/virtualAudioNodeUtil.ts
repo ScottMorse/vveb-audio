@@ -13,17 +13,11 @@ import { ALL_AUDIO_NODES } from "@/nativeWebAudio/audioNode/audioNodes"
 import {
   CreateVirtualAudioNodeInput,
   CreateVirtualAudioNodeOptions,
+  CreateVirtualAudioNodeOptionsOrReference,
   VirtualAudioNode,
   VirtualAudioNodeOfKind,
+  VirtualAudioNodeReference,
 } from "./virtualAudioNode"
-
-export interface VirtualAudioNodeReference {
-  idRef: string
-}
-
-export type CreateVirtualAudioNodeOptionsOrReference<
-  Name extends AudioNodeName = AudioNodeName
-> = CreateVirtualAudioNodeOptions<Name> | VirtualAudioNodeReference
 
 type OrphanedReference = VirtualAudioNodeReference & { parentId: string }
 
@@ -170,7 +164,7 @@ const createDefaultDestinationNode = (
     },
   })
 
-export type CreateRootOptions<Name extends AudioNodeName> =
+export type CreateRootOptions<Name extends AudioNodeName = AudioNodeName> =
   | CreateDefaultDestinationOptions
   | (CreateVirtualAudioNodeOptions<Name> & {
       defaultDestination?: never

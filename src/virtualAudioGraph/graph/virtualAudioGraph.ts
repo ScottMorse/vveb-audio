@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid"
 import { AudioNodeName } from "@/nativeWebAudio"
 import {
-  CreateVirtualAudioNodeOptions,
+  CreateRootOptions,
   VirtualAudioNode,
   virtualAudioNodeUtil,
 } from "../node"
@@ -33,9 +33,9 @@ export class VirtualAudioGraph {
     }
   }
 
-  constructor(roots: CreateVirtualAudioNodeOptions<AudioNodeName, true>[]) {
+  constructor(roots: CreateRootOptions[]) {
     this._roots = roots.map((root) => {
-      const { node } = virtualAudioNodeUtil.createRoot(root)
+      const node = virtualAudioNodeUtil.createRoot(root)
       this.rawRoots.push(node)
       return new VirtualAudioGraphNode(node, this.lookupMap, [])
     })
@@ -51,12 +51,10 @@ export class VirtualAudioGraph {
 
   private _id = nanoid()
   private _roots: VirtualAudioGraphNode[]
-  private rawRoots: VirtualAudioNode<AudioNodeName, true>[] = []
+  private rawRoots: VirtualAudioNode[] = []
   private lookupMap: NodeLookupMap = {}
 }
 
 export const createVirtualAudioGraph = (
-  root:
-    | CreateVirtualAudioNodeOptions<AudioNodeName, true>
-    | CreateVirtualAudioNodeOptions<AudioNodeName, true>[]
+  root: CreateRootOptions<AudioNodeName> | CreateRootOptions<AudioNodeName>[]
 ) => new VirtualAudioGraph(Array.isArray(root) ? root : [root])
