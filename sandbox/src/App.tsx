@@ -7,14 +7,14 @@ import {
 } from "vveb-audio/virtualAudioGraph/node/renderAudioNode"
 
 const myGraph = createVirtualAudioGraph({
-  node: "gain",
+  name: "gain",
   options: {
     gain: 0.01,
   },
   inputs: [
-    { node: "oscillator", options: { frequency: 440 } },
-    { node: "oscillator", options: { frequency: 554.37586 } },
-    { node: "oscillator", options: { frequency: 660 } },
+    { name: "oscillator", options: { frequency: 440 } },
+    { name: "oscillator", options: { frequency: 554.37586 } },
+    { name: "oscillator", options: { frequency: 660 } },
   ],
 })
 
@@ -34,7 +34,7 @@ export const App = () => {
       } else {
         const ctx =
           new AudioContext() /** @todo should context type be part of v graph? */
-        const node = renderAudioNode(myGraph.root, ctx)
+        const node = renderAudioNode(myGraph.roots[0].virtualNode, ctx)
         node.audioNode.connect(
           ctx.destination
         ) /** @todo need destination logic */

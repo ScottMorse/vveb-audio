@@ -56,5 +56,7 @@ export class VirtualAudioGraph {
 }
 
 export const createVirtualAudioGraph = (
-  roots: CreateVirtualAudioNodeRootOptions<AudioNodeName, true>[]
-) => new VirtualAudioGraph(roots)
+  root:
+    | CreateVirtualAudioNodeRootOptions<AudioNodeName, true>
+    | CreateVirtualAudioNodeRootOptions<AudioNodeName, true>[]
+) => new VirtualAudioGraph(Array.isArray(root) ? root : [root])
