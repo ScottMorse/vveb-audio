@@ -64,6 +64,13 @@ const createVirtualAudioNode = <
     return node as any
   }
 
+  if (options.id && idMap[options.id]) {
+    console.warn(
+      `Node with id ${options.id} already exists in the graph and will not be recreated. You can use { idRef: "${options.id}" } to reference it instead.`
+    )
+    return idMap[options.id] as any
+  }
+
   const node: VirtualAudioNode<Name> = {
     id: options.id || nanoid(),
     name: options.name,
@@ -166,11 +173,11 @@ const createDefaultDestinationNode = (
 
 export type CreateRootOptions<Name extends AudioNodeName = AudioNodeName> =
   | CreateDefaultDestinationOptions
-  | (CreateVirtualAudioNodeOptions<Name> & {
+  | (CreateVirtualAudioNodeOptionsOrReference<Name> & {
       defaultDestination?: never
     })
 
-const isDefaultDestination = (
+export const isDefaultDestination = (
   options: CreateRootOptions<AudioNodeName>
 ): options is CreateDefaultDestinationOptions =>
   !!(options as CreateDefaultDestinationOptions).defaultDestination
@@ -183,17 +190,23 @@ const createRootVirtualAudioNode = <Name extends AudioNodeName>(
   : VirtualAudioNode<Name> =>
   isDefaultDestination(options)
     ? createDefaultDestinationNode(options.inputs)
-    : (createVirtualAudioNode({
-        options: {
-          ...options,
-          inputs: (getAudioNodeConfig(options.name).kind.includes("source")
-            ? (() => {
-                console.warn("Source nodes should not have inputs")
-                return []
-              })()
-            : options.inputs) as any,
-        },
-      }) as any)
+    : (createVirtualAudioNode<CreateVirtualAudioNodeOptionsOrReference<Name>>(
+        isVirtualAudioNodeReference(options)
+          ? { options }
+          : {
+              options: {
+                ...options,
+                inputs: (getAudioNodeConfig(options.name).kind.includes(
+                  "source"
+                )
+                  ? (() => {
+                      console.warn("Source nodes should not have inputs")
+                      return []
+                    })()
+                  : options.inputs) as any,
+              },
+            }
+      ) as any)
 
 /** Simply a pass through to check type of input more strongly */
 export const createVirtualAudioInput = <Name extends AudioNodeName>(
@@ -236,16 +249,21 @@ const updateNodeType = <
 export const getNodeConfig = <Node extends VirtualAudioNode>(node: Node) =>
   getAudioNodeConfig(node.name)
 
+export interface IsVirtualAudioNodeOptions<
+  Name extends AudioNodeName = AudioNodeName,
+  Kind extends AudioNodeKind = AudioNodeKind
+> {
+  kind?: Kind | Kind[]
+  name?: Name | Name[]
+}
+
 /** @todo doc and test */
 const isVirtualAudioNode = <
   Name extends AudioNodeName = AudioNodeName,
   Kind extends AudioNodeKind = AudioNodeKind
 >(
   value: any,
-  options?: {
-    kind?: Kind | Kind[]
-    name?: Name | Name[]
-  }
+  options?: IsVirtualAudioNodeOptions<Name, Kind>
 ): value is AudioNodeName extends Name
   ? VirtualAudioNodeOfKind<Kind>
   : VirtualAudioNode<Name> =>
@@ -263,4 +281,5 @@ export const virtualAudioNodeUtil = {
   updateType: updateNodeType,
   getConfig: getNodeConfig,
   isNode: isVirtualAudioNode,
+  isReference: isVirtualAudioNodeReference,
 }

@@ -10,8 +10,10 @@ export const createAudioNode = <Name extends AudioNodeName>(
   name: Name,
   ctx: AudioContext,
   options: AudioNodeClassOptions<Name>
-) =>
-  new (getAudioNodeConfig(name).cls)(
-    ctx,
-    options as any
-  ) as AudioNodeInstance<Name>
+) => {
+  const config = getAudioNodeConfig(name)
+  if (!config) {
+    throw new Error(`Unsupported AudioNode '${name}'`)
+  }
+  return new config.cls(ctx, options as any) as AudioNodeInstance<Name>
+}
