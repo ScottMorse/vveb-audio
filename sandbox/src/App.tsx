@@ -1,54 +1,55 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useState } from "react"
+import { getCanAudioContextStartListener } from "vveb-audio/nativeWebAudio"
 import { createVirtualAudioGraph } from "vveb-audio/virtualAudioGraph"
-import {
-  renderAudioNode,
-  RenderedAudioNode,
-} from "vveb-audio/virtualAudioGraph/node/renderAudioNode"
 
 const myGraph = createVirtualAudioGraph({
-  name: "gain",
-  options: {
-    gain: 0.01,
-  },
+  defaultDestination: true,
   inputs: [
-    { name: "oscillator", options: { frequency: 440 } },
-    { name: "oscillator", options: { frequency: 554.37586 } },
-    { name: "oscillator", options: { frequency: 660 } },
+    {
+      name: "gain",
+      options: {
+        gain: 0.01,
+      },
+      inputs: [
+        { name: "oscillator", options: { frequency: 440 } },
+        { name: "oscillator", options: { frequency: 554.37586 } },
+        { name: "oscillator", options: { frequency: 660 } },
+      ],
+    },
   ],
 })
 
+const listener = getCanAudioContextStartListener()
+
 export const App = () => {
   const [isPlaying, setIsPlaying] = useState(false)
-  const [renderedNode, setRenderedNode] =
-    useState<RenderedAudioNode<any> | null>(null)
+  const canStartRef = useRef(listener.canStart)
+
+  useEffect(() => {
+    if (!canStartRef.current) {
+      listener.on("canStart", () => {
+        canStartRef.current = true
+      })
+    }
+  }, [])
 
   useEffect(() => {
     if (isPlaying) {
-      if (renderedNode) {
-        renderedNode.inputs.forEach((input) => {
-          if (input.audioNode instanceof OscillatorNode) {
-            input.audioNode.start()
-          }
-        })
-      } else {
-        const ctx =
-          new AudioContext() /** @todo should context type be part of v graph? */
-        const node = renderAudioNode(myGraph.roots[0].virtualNode, ctx)
-        node.audioNode.connect(
-          ctx.destination
-        ) /** @todo need destination logic */
-        setRenderedNode(node)
-      }
-    } else {
-      renderedNode?.inputs.forEach((input) => {
-        if (input.audioNode instanceof OscillatorNode) {
-          input.audioNode.stop()
+      setTimeout(() => {
+        if (canStartRef.current) {
+          myGraph.render()
+          myGraph
+            .getNodes({ kind: "source" }) /** @todo This filter is broken */
+            .forEach((node) => (node?.audioNode as OscillatorNode)?.start?.())
         }
       })
-      setRenderedNode(null)
+    } else {
+      myGraph
+        .getNodes({ kind: "source" })
+        .forEach((node) => (node?.audioNode as OscillatorNode)?.stop?.())
     }
-  }, [isPlaying, renderedNode])
+  }, [isPlaying])
 
   return (
     <div>

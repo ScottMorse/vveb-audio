@@ -12,9 +12,12 @@ import {
   VirtualAudioNodeOfKind,
   virtualAudioNodeUtil,
 } from "../node"
+import { ContextRenderer } from "../renderer/contextRenderer"
+import { NodeRenderer } from "../renderer/nodeRenderer"
 import { NodeLookupMap, resolveNodes } from "./lookupMap"
 /** WARNING: This is a circular dependency, but only used as a type, so it is tolerated */
 import { VirtualAudioGraph } from "./virtualAudioGraph"
+import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
 
 export type VirtualAudioGraphNodeOfKind<Kind extends AudioNodeKind> =
   VirtualAudioGraphNode<AudioNodeNameOfKind<Kind>>
@@ -46,6 +49,14 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
   get isDestroyed() {
     return this._isDestroyed
+  }
+
+  get audioNode() {
+    return this.renderer.audioNode
+  }
+
+  render() {
+    this.renderer.render()
   }
 
   updateOptions(options: DeeplyPartial<AudioNodeClassOptions<Name>>) {
@@ -80,7 +91,12 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   addInput<Name extends AudioNodeNameOfKind<"effect" | "source">>(
     ...inputs: AddInputOptions<Name>[]
   ) {
-    const newInputs = resolveNodes(inputs, this.lookupMap, this.graph)
+    const newInputs = resolveNodes(
+      inputs,
+      this.lookupMap,
+      this.graph,
+      this.context
+    )
     for (const input of newInputs) {
       const { kind } = getAudioNodeConfig(input.name)
       if (kind.length === 1 && kind[0] === "destination") {
@@ -107,7 +123,8 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     virtualNode: VirtualAudioNode<Name>,
     lookupMap: NodeLookupMap,
     parents: VirtualAudioGraphNode[],
-    graph: VirtualAudioGraph
+    graph: VirtualAudioGraph,
+    private context: VirtualAudioGraphContext
   ) {
     this._virtualNode = virtualNode
     this._id = virtualNode.id
@@ -123,6 +140,8 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     lookupMap[virtualNode.id] = this
 
     this._parents = parents
+
+    this.renderer = new NodeRenderer(this, context)
   }
 
   protected addParent(parent: VirtualAudioGraphNode) {
@@ -160,7 +179,8 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
       vNode,
       this.lookupMap,
       [this],
-      this.graph
+      this.graph,
+      this.context
     )
   }
 
@@ -175,4 +195,5 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   private _parents: VirtualAudioGraphNode[]
   private lookupMap: NodeLookupMap
   private graph: VirtualAudioGraph
+  private renderer: NodeRenderer<Name>
 }

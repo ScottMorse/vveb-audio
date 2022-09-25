@@ -1,2 +1,2 @@
 export * from "./virtualAudioNode"
-export * from "./renderAudioNode"
+export * from "./virtualAudioNodeUtil"

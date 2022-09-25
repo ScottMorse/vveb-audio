@@ -8,6 +8,7 @@ import {
 
 /** WARNING: The following two imports are circular but imports are only used as types */
 import { VirtualAudioGraph } from "./virtualAudioGraph"
+import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
 import { VirtualAudioGraphNode } from "./virtualAudioGraphNode"
 
 export type NodeLookupMap = {
@@ -21,7 +22,8 @@ export type VirtualAudioGraphNodeArg =
 export const resolveNodes = (
   nodes: VirtualAudioGraphNodeArg[],
   lookupMap: NodeLookupMap,
-  graph: VirtualAudioGraph
+  graph: VirtualAudioGraph,
+  context: VirtualAudioGraphContext
 ) => {
   const ids: string[] = []
   const roots: VirtualAudioGraphNode[] = []
@@ -39,7 +41,9 @@ export const resolveNodes = (
       )
     } else {
       const node = virtualAudioNodeUtil.createRoot(nodeOption)
-      roots.push(new VirtualAudioGraphNode<any>(node, lookupMap, [], graph))
+      roots.push(
+        new VirtualAudioGraphNode<any>(node, lookupMap, [], graph, context)
+      )
     }
   }
 

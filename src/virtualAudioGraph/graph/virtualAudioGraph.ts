@@ -1,9 +1,9 @@
 import { nanoid } from "nanoid"
+import { AudioNodeKind, AudioNodeName } from "@/nativeWebAudio"
 import {
-  AudioNodeKind,
-  AudioNodeName,
-  AudioNodeNameOfKind,
-} from "@/nativeWebAudio"
+  CreateVirtualAudioContextOptions,
+  virtualAudioContextUtil,
+} from "../context"
 import {
   CreateRootOptions,
   IsVirtualAudioNodeOptions,
@@ -14,8 +14,11 @@ import {
   resolveNodes,
   VirtualAudioGraphNodeArg,
 } from "./lookupMap"
-import { VirtualAudioGraphNode } from "./virtualAudioGraphNode"
-import { VirtualAudioContext } from "../context"
+import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
+import {
+  VirtualAudioGraphNode,
+  VirtualAudioGraphNodeOfKind,
+} from "./virtualAudioGraphNode"
 
 export class VirtualAudioGraph {
   get id() {
@@ -26,10 +29,19 @@ export class VirtualAudioGraph {
     return this._roots
   }
 
-  getSources() {
-    return this.getNodes().filter((node) =>
-      virtualAudioNodeUtil.isNode(node, { kind: "source" })
-    )
+  get context() {
+    return this._context
+  }
+
+  render() {
+    if (this._context.canRender) {
+      this._context.render()
+      this.getNodes().forEach((node) => node?.render())
+    } else {
+      console.warn(
+        `Cannot render virtual audio graph '${this.id}' until user has interacted with the page`
+      )
+    }
   }
 
   getNodes<
@@ -58,9 +70,16 @@ export class VirtualAudioGraph {
     }
   }
 
-  constructor(roots: VirtualAudioGraphNodeArg[], context: VirtualAudioContext) {
-    this._roots = resolveNodes(roots, this.lookupMap, this)
-    this
+  constructor(
+    roots: VirtualAudioGraphNodeArg[],
+    context: CreateVirtualAudioContextOptions,
+    id?: string
+  ) {
+    this._id = id || nanoid()
+    this._context = new VirtualAudioGraphContext(
+      virtualAudioContextUtil.create(context)
+    )
+    this._roots = resolveNodes(roots, this.lookupMap, this, this._context)
   }
 
   private deleteRoot(rootId: string) {
@@ -70,11 +89,19 @@ export class VirtualAudioGraph {
     )
   }
 
-  private _id = nanoid()
+  private _id: string
   private _roots: VirtualAudioGraphNode[] = []
+  private _context: VirtualAudioGraphContext
   private lookupMap: NodeLookupMap = {}
 }
 
 export const createVirtualAudioGraph = (
-  root: CreateRootOptions<AudioNodeName> | CreateRootOptions<AudioNodeName>[]
-) => new VirtualAudioGraph(Array.isArray(root) ? root : [root])
+  root: CreateRootOptions<AudioNodeName> | CreateRootOptions<AudioNodeName>[],
+  context?: CreateVirtualAudioContextOptions,
+  id?: string
+) =>
+  new VirtualAudioGraph(
+    Array.isArray(root) ? root : [root],
+    context || { name: "default" },
+    id
+  )

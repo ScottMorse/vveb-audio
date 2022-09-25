@@ -8,12 +8,15 @@ import {
 /** Instantiate an AudioNode by its key name */
 export const createAudioNode = <Name extends AudioNodeName>(
   name: Name,
-  ctx: AudioContext,
+  ctx: BaseAudioContext,
   options: AudioNodeClassOptions<Name>
 ) => {
   const config = getAudioNodeConfig(name)
   if (!config) {
     throw new Error(`Unsupported AudioNode '${name}'`)
   }
-  return new config.cls(ctx, options as any) as AudioNodeInstance<Name>
+  return new config.cls(
+    ctx as BaseAudioContext & AudioContext,
+    options as any
+  ) as AudioNodeInstance<Name>
 }
