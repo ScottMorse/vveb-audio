@@ -17,8 +17,8 @@ import {
 } from "./lookupMap"
 import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
 import {
+  NarrowedVirtualAudioGraphNode,
   VirtualAudioGraphNode,
-  VirtualAudioGraphNodeOfKind,
 } from "./virtualAudioGraphNode"
 
 export class VirtualAudioGraph {
@@ -37,7 +37,7 @@ export class VirtualAudioGraph {
   render() {
     if (this._context.canRender) {
       this._context.render()
-      this.getNodes().forEach((node) => node?.render())
+      this.roots.forEach((rootNode) => rootNode.render())
     } else {
       console.warn(
         `Cannot render virtual audio graph '${this.id}' until user has interacted with the page`
@@ -50,20 +50,26 @@ export class VirtualAudioGraph {
     Kind extends AudioNodeKind = AudioNodeKind
   >(
     filter?: IsVirtualAudioNodeOptions<Name, Kind>
-  ): VirtualAudioGraphNode<NarrowedVirtualAudioNode<Name, Kind>["name"]>[] {
+  ): NarrowedVirtualAudioGraphNode<Name, Kind>[] {
     const nodes = Object.values(this.lookupMap)
     return filter
       ? nodes.filter((node) => virtualAudioNodeUtil.isNode(node, filter))
       : (nodes as any)
   }
 
-  getNode(nodeId: string, warn = false) {
+  getNode<
+    ExpectedName extends AudioNodeName = AudioNodeName,
+    ExpectedKind extends AudioNodeKind = AudioNodeKind
+  >(nodeId: string, warn = false) {
     const node = this.lookupMap[nodeId]
     if (warn && !node)
       console.warn(
         `Node ID '${nodeId}' in graph '${this.id}'`
       ) /** @todo verbosity-configurable logger */
-    return node || null
+    return (
+      (node as NarrowedVirtualAudioGraphNode<ExpectedName, ExpectedKind>) ||
+      null
+    )
   }
 
   deleteNode(nodeId: string, warn = false) {

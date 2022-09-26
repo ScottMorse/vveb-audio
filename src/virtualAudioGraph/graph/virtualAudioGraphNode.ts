@@ -8,6 +8,7 @@ import {
 } from "@/nativeWebAudio"
 import {
   CreateVirtualAudioNodeOptionsOrReference,
+  NarrowedVirtualAudioNode,
   VirtualAudioNode,
   VirtualAudioNodeOfKind,
   virtualAudioNodeUtil,
@@ -25,6 +26,11 @@ export type VirtualAudioGraphNodeOfKind<Kind extends AudioNodeKind> =
 export type AddInputOptions<Name extends AudioNodeName> =
   | CreateVirtualAudioNodeOptionsOrReference<Name>
   | VirtualAudioGraphNode<Name>
+
+export type NarrowedVirtualAudioGraphNode<
+  Name extends AudioNodeName = AudioNodeName,
+  Kind extends AudioNodeKind = AudioNodeKind
+> = VirtualAudioGraphNode<NarrowedVirtualAudioNode<Name, Kind>["name"]>
 
 export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   get id() {
