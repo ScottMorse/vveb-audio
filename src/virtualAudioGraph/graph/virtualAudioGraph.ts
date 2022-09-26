@@ -34,11 +34,16 @@ export class VirtualAudioGraph {
     return this._context
   }
 
+  get isRendered() {
+    return this._isRendered
+  }
+
   render() {
-    if (this._context.canRender) {
+    if (this._context.canRender && !this._isRendered) {
       this._context.render()
       this.roots.forEach((rootNode) => rootNode.render())
-    } else {
+      this._isRendered = true
+    } else if (!this._context.canRender) {
       console.warn(
         `Cannot render virtual audio graph '${this.id}' until user has interacted with the page`
       )
@@ -101,6 +106,7 @@ export class VirtualAudioGraph {
   private _id: string
   private _roots: VirtualAudioGraphNode[] = []
   private _context: VirtualAudioGraphContext
+  private _isRendered = false
   private lookupMap: NodeLookupMap = {}
 }
 

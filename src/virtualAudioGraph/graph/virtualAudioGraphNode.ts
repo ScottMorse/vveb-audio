@@ -49,8 +49,8 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     return this._inputs
   }
 
-  get parents() {
-    return this._parents
+  get outputs() {
+    return this._outputs
   }
 
   get isDestroyed() {
@@ -61,8 +61,20 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     return this.renderer.audioNode
   }
 
+  get isPlaying() {
+    return this.renderer.isPlaying
+  }
+
   render() {
     this.renderer.render()
+  }
+
+  start() {
+    this.renderer.start()
+  }
+
+  stop() {
+    this.renderer.stop()
   }
 
   updateOptions(options: DeeplyPartial<AudioNodeClassOptions<Name>>) {
@@ -119,7 +131,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
   destroy() {
     this.inputs.forEach((input) => input.destroy())
-    this.parents.forEach((parent) => parent.destroyInput(this.id))
+    this.outputs.forEach((output) => output.destroyInput(this.id))
     delete this.lookupMap[this.id]
     this._isDestroyed = true
     return this
@@ -128,7 +140,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   constructor(
     virtualNode: VirtualAudioNode<Name>,
     lookupMap: NodeLookupMap,
-    parents: VirtualAudioGraphNode[],
+    outputs: VirtualAudioGraphNode[],
     graph: VirtualAudioGraph,
     private context: VirtualAudioGraphContext
   ) {
@@ -145,13 +157,13 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
     lookupMap[virtualNode.id] = this
 
-    this._parents = parents
+    this._outputs = outputs
 
     this.renderer = new NodeRenderer(this, context)
   }
 
-  protected addParent(parent: VirtualAudioGraphNode) {
-    this._parents.push(parent)
+  protected addOutput(output: VirtualAudioGraphNode) {
+    this._outputs.push(output)
   }
 
   protected destroyInput(nodeId: string) {
@@ -174,10 +186,10 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   ): VirtualAudioGraphNodeOfKind<"effect" | "source"> {
     const existing = this.lookupMap[vNode.id]
     if (existing) {
-      if (existing.parents.find((parent) => parent === this)) {
+      if (existing.outputs.find((output) => output === this)) {
         console.warn(`Node '${vNode.id}' is already an input of '${this.id}'`)
       } else {
-        existing.addParent(this)
+        existing.addOutput(this)
       }
       return existing as VirtualAudioGraphNodeOfKind<"effect" | "source">
     }
@@ -198,7 +210,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   private _inputs: VirtualAudioGraphNode<
     AudioNodeNameOfKind<"effect" | "source">
   >[] = []
-  private _parents: VirtualAudioGraphNode[]
+  private _outputs: VirtualAudioGraphNode[]
   private lookupMap: NodeLookupMap
   private graph: VirtualAudioGraph
   private renderer: NodeRenderer<Name>

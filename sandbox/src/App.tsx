@@ -39,15 +39,13 @@ export const App = () => {
       setTimeout(() => {
         if (canStartRef.current) {
           myGraph.render()
-          myGraph
-            .getNodes({ kind: "source" })
-            .forEach((node) => node?.audioNode?.start())
+          myGraph.getNodes({ kind: "source" }).forEach((node) => node?.start())
         }
       })
     } else {
       myGraph
         .getNodes({ kind: "source" })
-        .forEach((node) => node?.audioNode?.stop())
+        .forEach((node) => node?.audioNode && node.stop())
     }
   }, [isPlaying])
 
