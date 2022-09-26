@@ -40,14 +40,14 @@ export const App = () => {
         if (canStartRef.current) {
           myGraph.render()
           myGraph
-            .getNodes({ kind: "source" }) /** @todo This filter is broken */
-            .forEach((node) => (node?.audioNode as OscillatorNode)?.start?.())
+            .getNodes({ kind: "source" })
+            .forEach((node) => node?.audioNode?.start())
         }
       })
     } else {
       myGraph
         .getNodes({ kind: "source" })
-        .forEach((node) => (node?.audioNode as OscillatorNode)?.stop?.())
+        .forEach((node) => node?.audioNode?.stop())
     }
   }, [isPlaying])
 

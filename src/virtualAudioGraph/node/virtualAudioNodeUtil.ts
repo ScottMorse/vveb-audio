@@ -257,6 +257,14 @@ export interface IsVirtualAudioNodeOptions<
   name?: Name | Name[]
 }
 
+/** Resolve node type by given generics. Useful when filtering a list of nodes by a set of names and/or kinds */
+export type NarrowedVirtualAudioNode<
+  Name extends AudioNodeName = AudioNodeName,
+  Kind extends AudioNodeKind = AudioNodeKind
+> = AudioNodeName extends Name
+  ? VirtualAudioNodeOfKind<Kind>
+  : VirtualAudioNode<Name>
+
 /** @todo doc and test */
 const isVirtualAudioNode = <
   Name extends AudioNodeName = AudioNodeName,
@@ -264,16 +272,12 @@ const isVirtualAudioNode = <
 >(
   value: any,
   options?: IsVirtualAudioNodeOptions<Name, Kind>
-): value is AudioNodeName extends Name
-  ? VirtualAudioNodeOfKind<Kind>
-  : VirtualAudioNode<Name> =>
+): value is NarrowedVirtualAudioNode<Name, Kind> =>
   Array.isArray(value?.inputs) &&
   !!ALL_AUDIO_NODES[value?.name as AudioNodeName] &&
   value?.id &&
   isAudioNodeNameOfKind(value.name, ...resolveArrayArg(options?.kind || [])) &&
-  options?.name
-    ? resolveArrayArg(options.name).includes(value.name)
-    : true
+  (options?.name ? resolveArrayArg(options.name).includes(value.name) : true)
 
 export const virtualAudioNodeUtil = {
   createRoot: createRootVirtualAudioNode,

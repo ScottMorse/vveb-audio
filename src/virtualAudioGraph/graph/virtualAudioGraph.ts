@@ -7,6 +7,7 @@ import {
 import {
   CreateRootOptions,
   IsVirtualAudioNodeOptions,
+  NarrowedVirtualAudioNode,
   virtualAudioNodeUtil,
 } from "../node"
 import {
@@ -47,11 +48,13 @@ export class VirtualAudioGraph {
   getNodes<
     Name extends AudioNodeName = AudioNodeName,
     Kind extends AudioNodeKind = AudioNodeKind
-  >(filter?: IsVirtualAudioNodeOptions<Name, Kind>) {
+  >(
+    filter?: IsVirtualAudioNodeOptions<Name, Kind>
+  ): VirtualAudioGraphNode<NarrowedVirtualAudioNode<Name, Kind>["name"]>[] {
     const nodes = Object.values(this.lookupMap)
     return filter
       ? nodes.filter((node) => virtualAudioNodeUtil.isNode(node, filter))
-      : nodes
+      : (nodes as any)
   }
 
   getNode(nodeId: string, warn = false) {
