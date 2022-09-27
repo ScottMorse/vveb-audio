@@ -48,15 +48,14 @@ This library should be fully extensible with custom AudioNode subclasses created
 
 ## Project major TODOs
 
-- Test coverage for native web audio AudioNode module
-- Test coverage for native web audio AudioContext module
-- Refinement of VirtualAudioGraph in general
-- Test coverage of VirtualAudioGraph
+- Implement prototype for handling `AudioParam`s
+- Refinement of VirtualAudioGraph in general (keep mutative class style for core graph utilities? make immutable state changes after mutation only in a React hooks submodule?)
+- Test coverage for everything
 - Review & update all JSDoc comments
 - Logging utility - default configurable print level 0-4 based on whether localhost, logs can be hooked into as event emitter
 - Support for custom AudioNode and BaseAudioContext subclasses (requires extendible config and supporting types for TS module augmentation)
 - React bindings
-- Sandbox/demos
+- Demos
 - Build & publish process
 - Contribution docs
 - API docs

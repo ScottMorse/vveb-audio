@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react"
 import { useState } from "react"
+import { Logger, setVVebLogLevel } from "vveb-audio/lib/logger"
 import { getCanAudioContextStartListener } from "vveb-audio/nativeWebAudio"
 import { createVirtualAudioGraph } from "vveb-audio/virtualAudioGraph"
+
+setVVebLogLevel("debug")
 
 const myGraph = createVirtualAudioGraph({
   defaultDestination: true,
@@ -58,3 +61,4 @@ export const App = () => {
     </div>
   )
 }
+;(window as any).logger = new Logger()
