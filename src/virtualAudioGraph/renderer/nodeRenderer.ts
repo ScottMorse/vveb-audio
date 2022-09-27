@@ -43,12 +43,13 @@ export class NodeRenderer<Name extends AudioNodeName> {
     }
   }
 
-  stop(cleanup = true) {
+  /** Eagerly rerenders the AudioNode by default, unless `false` passed */
+  stop(eagerRerender = true) {
     if (this.canPlay()) {
       this._audioNode?.stop()
       this._isPlaying = false
-      if (cleanup) {
-        this.cleanUpAudioNode()
+      if (eagerRerender) {
+        this.render(true)
       }
     }
   }
