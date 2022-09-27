@@ -22,8 +22,9 @@ export interface Log {
 }
 
 interface LoggerEvents {
-  log: Log
+  log: Log & { contextName: string }
 }
+const LOG_EMITTER = new TypedEventEmitter<LoggerEvents>()
 
 const DEFAULT_PRINT_LEVEL = IS_LOCALHOST ? "warn" : "error"
 
@@ -53,7 +54,7 @@ interface LoggerOptions {
 }
 
 /** @todo doc test. doc site could have window.vvebAudioLogger present */
-export class Logger extends TypedEventEmitter<LoggerEvents> {
+export class Logger {
   static get printLevel() {
     return this._printLevel
   }
@@ -98,7 +99,7 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
     this._printLevel = level
   }
 
-  get contextName() {
+  get contextName(): string {
     return this._contextName || ""
   }
 
@@ -107,7 +108,6 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
   }
 
   constructor(options?: LoggerOptions) {
-    super()
     this._printLevel = options?.printLevel || "default"
     this._contextName = options?.contextName
   }
@@ -117,7 +117,7 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
 
   private _log(log: Log) {
     this.printLog(log)
-    this.emit("log", log)
+    LOG_EMITTER.emit("log", { ...log, contextName: this.contextName })
   }
 
   private printLog(log: Log) {
@@ -164,3 +164,11 @@ export const setVVebLogLevel = (level: InstanceLogLevelSetting) => {
 }
 
 export const logger = new Logger()
+
+export const listenToVVebLogs = <Event extends keyof LoggerEvents>(
+  event: Event,
+  listener: (...args: LoggerEvents[Event][]) => void,
+  remove?: boolean
+) => {
+  LOG_EMITTER[remove ? "off" : "on"](event, listener)
+}

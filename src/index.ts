@@ -1,6 +1,6 @@
 export * from "./nativeWebAudio"
 export * from "./virtualAudioGraph"
-export { setVVebLogLevel } from "./lib/logger"
+export { setVVebLogLevel, listenToVVebLogs } from "./lib/logger"
 export type {
   LogLevel as VVebLogLevel,
   LogMessage as VVebLogMessage,
