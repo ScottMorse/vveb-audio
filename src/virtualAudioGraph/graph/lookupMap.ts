@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger"
 import { AudioNodeName } from "@/nativeWebAudio"
 import {
   CreateRootOptions,
@@ -36,7 +37,7 @@ export const resolveNodes = (
     } else if (isDefaultDest && lookupMap[DEFAULT_DESTINATION_ID]) {
       roots.push(lookupMap[DEFAULT_DESTINATION_ID])
     } else if (!isDefaultDest && nodeOption.id && lookupMap[nodeOption.id]) {
-      console.warn(
+      logger.warn(
         `Node ID '${nodeOption.id}' already exists in graph and will not be recreated. You can reference it with { idRef: "${nodeOption.id}" } instead.`
       )
     } else {
@@ -52,7 +53,7 @@ export const resolveNodes = (
     if (node) {
       roots.push(node)
     } else {
-      console.warn(`Node ID reference '${id}' not found in graph '${graph.id}'`)
+      logger.warn(`Node ID reference '${id}' not found in graph '${graph.id}'`)
     }
   }
   return roots

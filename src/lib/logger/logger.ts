@@ -1,3 +1,4 @@
+import isEqual from "lodash/isEqual"
 import { IS_LOCALHOST } from "@/lib/util/isLocalhost"
 import { ArrayItem } from "@/lib/util/types"
 import { TypedEventEmitter } from "../util/events"
@@ -104,16 +105,38 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
     this.emit("log", log)
   }
 
+  private printLog(log: Log) {
+    if (isLevelAtLeast(log.level, this.resolvePrintLevel())) {
+      console[log.level](
+        this.formatLog(log),
+        ...this.createMetadataArgs(log.metadata)
+      )
+    }
+  }
+
   private resolvePrintLevel() {
     return this._printLevel === "default" ? Logger.printLevel : this._printLevel
   }
 
-  private printLog(log: Log) {
-    if (isLevelAtLeast(log.level, this.resolvePrintLevel())) {
-      console[log.level](`[vveb-audio]: ${log.message}`, {
-        metadata: log.metadata,
-      })
-    }
+  private formatLog(log: Log) {
+    return `[vveb-audio: ${log.level.toUpperCase()}] ${
+      log.message instanceof Error
+        ? `Error: ${log.message.message}\nStack:${log.message.stack?.replace(
+            "Error:",
+            ""
+          )}`
+        : log.message
+    }`
+  }
+
+  private createMetadataArgs(metadata: LogMetadata) {
+    return isEqual(metadata, {})
+      ? []
+      : [
+          {
+            metadata,
+          },
+        ]
   }
 
   private static _printLevel: LogLevelSetting = DEFAULT_PRINT_LEVEL
@@ -122,3 +145,5 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
 export const setVVebLogLevel = (level: InstanceLogLevelSetting) => {
   Logger.printLevel = level === "default" ? DEFAULT_PRINT_LEVEL : level
 }
+
+export const logger = new Logger()

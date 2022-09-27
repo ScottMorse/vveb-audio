@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger"
 import {
   createAudioContext,
   getCanAudioContextStartListener,
@@ -15,13 +16,16 @@ export class ContextRenderer {
 
   render() {
     if (this.canRender) {
+      logger.debug(`Rendering context '${this.virtualContext.id}'`)
       this._audioContext = createAudioContext(
         this.virtualContext.name,
         this.virtualContext.options
       )
     } else {
-      console.warn(
-        `Cannot render audio context until user has interacted with the page`
+      logger.warn(
+        new Error(
+          `Cannot render audio context until user has interacted with the page`
+        )
       )
     }
     return this._audioContext

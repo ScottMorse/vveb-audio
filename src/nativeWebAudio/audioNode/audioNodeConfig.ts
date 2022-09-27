@@ -1,4 +1,5 @@
 import intersection from "lodash/intersection"
+import { logger } from "@/lib/logger"
 import { ALL_AUDIO_NODES } from "./audioNodes"
 import {
   AudioNodeClass,
@@ -21,7 +22,7 @@ export const getAudioNodeConfig = <Name extends AudioNodeName>(
   name: Name
 ): AudioNodeConfig<Name> => {
   const config = ALL_AUDIO_NODES[name]
-  if (!config) console.warn(`Unsupported AudioNode '${name}'`)
+  if (!config) logger.warn(`Unsupported AudioNode '${name}'`)
   return config as any as AudioNodeConfig<Name>
 }
 

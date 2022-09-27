@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger"
 import {
   AudioNodeInstance,
   AudioNodeName,
@@ -19,17 +20,18 @@ export class NodeRenderer<Name extends AudioNodeName> {
   }
 
   render(forceRerender = false) {
-    if (!this.canRender(forceRerender)) return
+    if (!this.shouldRerender(forceRerender)) return
+    const existingNode = this._audioNode
 
+    logger.debug(`Rendering node '${this.virtualNode.id}'`, { node: this })
     const audioNode = this.createAudioNode()
 
-    if (this._audioNode) {
-      this.handleRerender(this._audioNode, audioNode)
+    if (existingNode) {
+      this.cleanUpAudioNode()
+      this.handleRerender(existingNode, audioNode)
     }
 
     this.connectInputs(audioNode)
-
-    this.cleanUpAudioNode()
 
     this._audioNode = audioNode
 
@@ -38,6 +40,7 @@ export class NodeRenderer<Name extends AudioNodeName> {
 
   start() {
     if (this.canPlay()) {
+      logger.debug(`Starting node '${this.virtualNode.id}'`, { node: this })
       this._audioNode?.start()
       this._isPlaying = true
     }
@@ -46,10 +49,13 @@ export class NodeRenderer<Name extends AudioNodeName> {
   /** Eagerly rerenders the AudioNode by default, unless `false` passed */
   stop(eagerRerender = true) {
     if (this.canPlay()) {
+      logger.debug(`Stopping node '${this.virtualNode.id}'`, { node: this })
       this._audioNode?.stop()
       this._isPlaying = false
       if (eagerRerender) {
         this.render(true)
+      } else {
+        this.cleanUpAudioNode()
       }
     }
   }
@@ -60,6 +66,7 @@ export class NodeRenderer<Name extends AudioNodeName> {
   ) {}
 
   private createAudioNode(): AudioNodeInstance<Name> {
+    logger.debug(`Creating audio node '${this.virtualNode.id}'`, { node: this })
     const audioContext = this.context.audioContext as BaseAudioContext
     return this.virtualNode.id === DEFAULT_DESTINATION_ID
       ? (audioContext.destination as any)
@@ -78,9 +85,17 @@ export class NodeRenderer<Name extends AudioNodeName> {
       if (!outputNode.audioNode) {
         outputNode.render()
       }
+      logger.debug(
+        `Reconnecting '${this.virtualNode.id}' to output node '${outputNode.id}'`,
+        { node: this }
+      )
       newAudioNode.connect(outputNode.audioNode as AudioNode)
     })
     this.virtualNode.inputs.forEach((inputNode) => {
+      logger.debug(
+        `Disconnecting input node '${inputNode.id}' from '${this.virtualNode.id}'`,
+        { node: this }
+      )
       inputNode.audioNode?.disconnect(existingAudioNode)
     })
   }
@@ -90,13 +105,21 @@ export class NodeRenderer<Name extends AudioNodeName> {
       if (!inputNode.audioNode) {
         inputNode.render()
       }
+      logger.debug(
+        `Connecting input node '${inputNode.id}' to '${this.virtualNode.id}'`,
+        {
+          id: this.virtualNode.id,
+          inputNode,
+          newAudioNode,
+        }
+      )
       inputNode.audioNode?.connect(newAudioNode)
     })
   }
 
-  private canRender(forceRerender: boolean) {
+  private shouldRerender(forceRerender: boolean) {
     if (!this.context.audioContext) {
-      console.warn(
+      logger.warn(
         `Cannot render node '${this.virtualNode.id}' because the context has not been rendered`
       )
       return false
@@ -119,12 +142,15 @@ export class NodeRenderer<Name extends AudioNodeName> {
   }
 
   private warnCannotPlay(because: string) {
-    console.warn(`Cannot play node '${this.virtualNode.id}' because ${because}`)
+    logger.warn(`Cannot play node '${this.virtualNode.id}' because ${because}`)
     return false
   }
 
   private cleanUpAudioNode() {
     if (!this._audioNode) return
+    logger.debug(`Cleaning up previous audio node '${this.virtualNode.id}'`, {
+      node: this,
+    })
     if (this._isPlaying) {
       this.stop(false)
     }

@@ -7,20 +7,26 @@ import { createVirtualAudioGraph } from "vveb-audio/virtualAudioGraph"
 setVVebLogLevel("debug")
 
 const myGraph = createVirtualAudioGraph({
-  defaultDestination: true,
-  inputs: [
-    {
-      name: "gain",
-      options: {
-        gain: 0.01,
+  id: "my-graph",
+  root: {
+    defaultDestination: true,
+    inputs: [
+      {
+        id: "gain",
+        name: "gain",
+        options: {
+          gain: 0.01,
+        },
+        inputs: [
+          { id: "osc1", name: "oscillator", options: { frequency: 440 } },
+          { id: "osc2", name: "oscillator", options: { frequency: 554.37586 } },
+          { id: "osc3", name: "oscillator", options: { frequency: 660 } },
+        ],
       },
-      inputs: [
-        { name: "oscillator", options: { frequency: 440 } },
-        { name: "oscillator", options: { frequency: 554.37586 } },
-        { name: "oscillator", options: { frequency: 660 } },
-      ],
-    },
-  ],
+    ],
+  },
+  context: { id: "my-context", name: "default" },
+  autoRender: true,
 })
 
 const listener = getCanAudioContextStartListener()

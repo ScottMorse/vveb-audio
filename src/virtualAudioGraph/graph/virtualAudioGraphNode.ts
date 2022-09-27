@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger"
 import { DeeplyPartial } from "@/lib/util/types"
 import {
   AudioNodeClassOptions,
@@ -13,7 +14,6 @@ import {
   VirtualAudioNodeOfKind,
   virtualAudioNodeUtil,
 } from "../node"
-import { ContextRenderer } from "../renderer/contextRenderer"
 import { NodeRenderer } from "../renderer/nodeRenderer"
 import { NodeLookupMap, resolveNodes } from "./lookupMap"
 /** WARNING: This is a circular dependency, but only used as a type, so it is tolerated */
@@ -118,8 +118,10 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     for (const input of newInputs) {
       const { kind } = getAudioNodeConfig(input.name)
       if (kind.length === 1 && kind[0] === "destination") {
-        console.warn(
-          `Cannot add destination node '${input.id}' as input to node '${this.id}' in graph ${this.graph.id}`
+        logger.warn(
+          new Error(
+            `Cannot add destination node '${input.id}' as input to node '${this.id}' in graph ${this.graph.id}`
+          )
         )
       } else {
         this._inputs.push(
@@ -169,7 +171,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   protected destroyInput(nodeId: string) {
     const index = this._inputs.findIndex(({ id }) => id === nodeId)
     if (index === -1) {
-      console.warn(
+      logger.warn(
         `Node ID '${nodeId}' not found in inputs of node ID '${this.id}'`
       ) /** @todo verbosity-configurable logger */
       return
@@ -187,7 +189,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     const existing = this.lookupMap[vNode.id]
     if (existing) {
       if (existing.outputs.find((output) => output === this)) {
-        console.warn(`Node '${vNode.id}' is already an input of '${this.id}'`)
+        logger.warn(`Node '${vNode.id}' is already an input of '${this.id}'`)
       } else {
         existing.addOutput(this)
       }

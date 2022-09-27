@@ -1,5 +1,6 @@
 import mergeWith from "lodash/mergeWith"
 import { nanoid } from "nanoid"
+import { logger } from "@/lib/logger"
 import { resolveArrayArg } from "@/lib/util/array/resolveArrayArg"
 import { DeeplyPartial } from "@/lib/util/types"
 import {
@@ -65,7 +66,7 @@ const createVirtualAudioNode = <
   }
 
   if (options.id && idMap[options.id]) {
-    console.warn(
+    logger.warn(
       `Node with id ${options.id} already exists in the graph and will not be recreated. You can use { idRef: "${options.id}" } to reference it instead.`
     )
     return idMap[options.id] as any
@@ -118,7 +119,7 @@ const createVirtualAudioNode = <
     const nodeKind = getAudioNodeConfig(node.name).kind
     if (nodeKind.length === 1 && nodeKind[0] === "source") {
       /** @todo maybe should be configurable on AudioNodeName basis with more AudioNodeConfig metadata about input/output constraints */
-      console.warn(
+      logger.warn(
         `A source node cannot have an input (node ID ref: '${node.id}')`
       )
       parent.inputs.splice(parentInputIndex, 1)
@@ -135,7 +136,7 @@ const createVirtualAudioNode = <
 
   if (node.id === resolvedRootId) {
     for (const nodeId of orphanedReferences) {
-      console.warn(`Node idRef '${nodeId}' was not found in the graph`)
+      logger.warn(`Node idRef '${nodeId}' was not found in the graph`)
     }
   }
 
@@ -200,7 +201,7 @@ const createRootVirtualAudioNode = <Name extends AudioNodeName>(
                   "source"
                 )
                   ? (() => {
-                      console.warn("Source nodes should not have inputs")
+                      logger.warn("Source nodes should not have inputs")
                       return []
                     })()
                   : options.inputs) as any,

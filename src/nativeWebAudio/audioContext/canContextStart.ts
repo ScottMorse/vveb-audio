@@ -1,10 +1,12 @@
+import { logger } from "@/lib/logger"
 import { TypedEventEmitter } from "@/lib/util/events"
+import { IS_BROWSER } from "@/lib/util/isBrowser"
 
 const TRIGGERING_EVENTS = ["keydown", "click", "touchend"] as const
 
 const listenForUserInteraction = (callback: () => void) => {
-  if (typeof window === undefined) {
-    console.error(
+  if (!IS_BROWSER) {
+    logger.error(
       new Error(
         "Cannot listen for user events to allow AudioContext without DOM (window is not present)"
       )
@@ -52,6 +54,7 @@ export class ContextCanStartListener extends TypedEventEmitter<ContextCanStartLi
 
   private handleCanStart = () => {
     this._canStart = true
+    logger.info("Audio contexts can now start")
     this.emit("canStart")
   }
 
