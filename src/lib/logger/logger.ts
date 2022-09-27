@@ -47,6 +47,11 @@ const isLevelAtLeast = (level: LogLevel, levelSetting: LogLevelSetting) =>
 
 type InstanceLogLevelSetting = LogLevelSetting | "default"
 
+interface LoggerOptions {
+  printLevel?: InstanceLogLevelSetting
+  contextName?: string
+}
+
 /** @todo doc test. doc site could have window.vvebAudioLogger present */
 export class Logger extends TypedEventEmitter<LoggerEvents> {
   static get printLevel() {
@@ -93,11 +98,21 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
     this._printLevel = level
   }
 
-  constructor(printLevel: InstanceLogLevelSetting = "default") {
-    super()
-    this._printLevel = printLevel
+  get contextName() {
+    return this._contextName || ""
   }
 
+  set contextName(name: string | null) {
+    this._contextName = name ?? undefined
+  }
+
+  constructor(options?: LoggerOptions) {
+    super()
+    this._printLevel = options?.printLevel || "default"
+    this._contextName = options?.contextName
+  }
+
+  private _contextName?: string
   private _printLevel: InstanceLogLevelSetting = "default"
 
   private _log(log: Log) {
@@ -119,7 +134,9 @@ export class Logger extends TypedEventEmitter<LoggerEvents> {
   }
 
   private formatLog(log: Log) {
-    return `[vveb-audio: ${log.level.toUpperCase()}] ${
+    return `[vveb-audio: ${log.level.toUpperCase()}]${
+      this._contextName ? ` [${this._contextName}]` : ""
+    } ${
       log.message instanceof Error
         ? `Error: ${log.message.message}\nStack:${log.message.stack?.replace(
             "Error:",

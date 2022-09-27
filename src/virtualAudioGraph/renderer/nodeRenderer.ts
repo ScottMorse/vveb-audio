@@ -1,4 +1,4 @@
-import { logger } from "@/lib/logger"
+import { Logger } from "@/lib/logger"
 import {
   AudioNodeInstance,
   AudioNodeName,
@@ -9,6 +9,8 @@ import {
 import { VirtualAudioGraphNode } from "../graph"
 import { VirtualAudioGraphContext } from "../graph/virtualAudioGraphContext"
 import { DEFAULT_DESTINATION_ID } from "../node"
+
+const logger = new Logger({ contextName: "Renderer" })
 
 export class NodeRenderer<Name extends AudioNodeName> {
   get audioNode() {
@@ -25,6 +27,7 @@ export class NodeRenderer<Name extends AudioNodeName> {
 
     logger.debug(`Rendering node '${this.virtualNode.id}'`, { node: this })
     const audioNode = this.createAudioNode()
+    logger.debug(`Created audio node '${this.virtualNode.id}'`, { node: this })
 
     if (existingNode) {
       this.cleanUpAudioNode()
@@ -66,7 +69,6 @@ export class NodeRenderer<Name extends AudioNodeName> {
   ) {}
 
   private createAudioNode(): AudioNodeInstance<Name> {
-    logger.debug(`Creating audio node '${this.virtualNode.id}'`, { node: this })
     const audioContext = this.context.audioContext as BaseAudioContext
     return this.virtualNode.id === DEFAULT_DESTINATION_ID
       ? (audioContext.destination as any)

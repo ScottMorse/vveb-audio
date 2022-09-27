@@ -1,9 +1,11 @@
-import { logger } from "@/lib/logger"
+import { Logger } from "@/lib/logger"
 import {
   createAudioContext,
   getCanAudioContextStartListener,
 } from "@/nativeWebAudio"
 import { VirtualAudioGraphContext } from "../graph/virtualAudioGraphContext"
+
+const logger = new Logger({ contextName: "Renderer" })
 
 export class ContextRenderer {
   get canRender() {
@@ -21,6 +23,7 @@ export class ContextRenderer {
         this.virtualContext.name,
         this.virtualContext.options
       )
+      logger.debug(`Created audio context '${this.virtualContext.id}'`)
     } else {
       logger.warn(
         new Error(
