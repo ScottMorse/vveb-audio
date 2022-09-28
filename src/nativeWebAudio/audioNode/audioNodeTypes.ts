@@ -1,4 +1,5 @@
 import { ArrayItem } from "@/lib/util/types"
+import { AudioParamName } from "../audioParam/audioParamTypes"
 import { ALL_AUDIO_NODES } from "./audioNodes"
 
 type AllNodes = typeof ALL_AUDIO_NODES
@@ -37,3 +38,7 @@ export type AudioNodeClassOptions<Name extends AudioNodeName = AudioNodeName> =
   ConstructorParameters<AudioNodeClass<Name>>[1] extends undefined
     ? undefined
     : ConstructorParameters<AudioNodeClass<Name>>[1]
+
+export type AudioNodeClassOptionsOfKind<
+  Kind extends AudioNodeKind = AudioNodeKind
+> = AudioNodeClassOptions<AudioNodeNameOfKind<Kind>>

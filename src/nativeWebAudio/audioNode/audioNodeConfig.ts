@@ -13,17 +13,23 @@ export type AudioNodeConfig<Name extends AudioNodeName = AudioNodeName> = {
   kind: AudioNodeKind<Name>[]
 }
 
+const FALLBACK_NODE_CONFIG = ALL_AUDIO_NODES.audio
+
 /**
  * Lookup data about an AudioNode by its key name.
  * This gives you access to the class itself, as well as
  * the node kind (source, effect, or destination).
  */
 export const getAudioNodeConfig = <Name extends AudioNodeName>(
-  name: Name
+  name: Name,
+  logError = true
 ): AudioNodeConfig<Name> => {
   const config = ALL_AUDIO_NODES[name]
-  if (!config) logger.warn(`Unsupported AudioNode '${name}'`)
-  return config as any as AudioNodeConfig<Name>
+  if (!config && logError)
+    logger.warn(
+      `Unsupported AudioNode '${name}' (Falls back to plain AudioNode)`
+    )
+  return (config as any as AudioNodeConfig<Name>) || FALLBACK_NODE_CONFIG
 }
 
 export const isAudioNodeNameOfKind = <Kind extends AudioNodeKind>(
