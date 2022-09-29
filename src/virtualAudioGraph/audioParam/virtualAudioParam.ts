@@ -1,8 +1,11 @@
 import { PartiallyRequired } from "@/lib/util/types"
-import { AudioNodeName, AudioParamName } from "@/nativeWebAudio"
+import {
+  AudioNodeName,
+  AudioParamName,
+  discoverDefaultAudioParamValues,
+} from "@/nativeWebAudio"
 
 export interface VirtualAudioParam {
-  nodeId: string
   value: number
   defaultValue: number
   minValue: number
@@ -14,29 +17,19 @@ export type VirtualAudioParams<Name extends AudioNodeName> = {
   [key in AudioParamName<Name>]: VirtualAudioParam
 }
 
-export type CreateVirtualAudioParamOptions = PartiallyRequired<
-  Partial<VirtualAudioParam>,
-  "nodeId"
->
+export type CreateVirtualAudioParamOptions = Partial<VirtualAudioParam> & {
+  nodeName: AudioNodeName
+  name: AudioParamName
+}
 
 export const DEFAULT_AUTOMATION_RATE = "a-rate" as const
 
 const createVirtualAudioParam = (
   options: CreateVirtualAudioParamOptions
 ): VirtualAudioParam => {
-  let defaultValue = 0
-  for (const key of [
-    "defaultValue",
-    "value",
-    "minValue",
-    "maxValue",
-  ] as const) {
-    const value = options[key]
-    if (typeof value === "number") {
-      defaultValue = value
-      break
-    }
-  }
+  const defaultValue = discoverDefaultAudioParamValues(options.nodeName)[
+    options.name
+  ] as number
 
   const resolveValue = (key: keyof typeof options) => {
     const value = options[key]
@@ -44,7 +37,6 @@ const createVirtualAudioParam = (
   }
 
   return {
-    nodeId: options.nodeId,
     value: resolveValue("value"),
     defaultValue: resolveValue("defaultValue"),
     minValue: resolveValue("minValue"),

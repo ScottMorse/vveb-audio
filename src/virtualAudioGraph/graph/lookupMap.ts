@@ -3,7 +3,7 @@ import { AudioNodeName } from "@/nativeWebAudio"
 import {
   CreateRootOptions,
   DEFAULT_DESTINATION_ID,
-  isDefaultDestination,
+  isDefaultDestinationOptions,
   virtualAudioNodeUtil,
 } from "../node"
 
@@ -29,7 +29,7 @@ export const resolveNodes = (
   const ids: string[] = []
   const roots: VirtualAudioGraphNode[] = []
   for (const nodeOption of nodes) {
-    const isDefaultDest = isDefaultDestination(nodeOption)
+    const isDefaultDest = isDefaultDestinationOptions(nodeOption)
     if (nodeOption instanceof VirtualAudioGraphNode) {
       roots.push(nodeOption)
     } else if (virtualAudioNodeUtil.isReference(nodeOption)) {

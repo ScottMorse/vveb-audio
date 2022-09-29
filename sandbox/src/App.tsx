@@ -12,16 +12,36 @@ const myGraph = createVirtualAudioGraph({
     defaultDestination: true,
     inputs: [
       {
-        id: "gain",
-        name: "gain",
-        options: {
-          gain: 0.01,
+        node: {
+          id: "gain",
+          name: "gain",
+          options: {
+            gain: 0.01,
+          },
+          inputs: [
+            {
+              node: {
+                id: "osc1",
+                name: "oscillator",
+                options: { frequency: 440 },
+              },
+            },
+            {
+              node: {
+                id: "osc2",
+                name: "oscillator",
+                options: { frequency: 554.37586 },
+              },
+            },
+            {
+              node: {
+                id: "osc3",
+                name: "oscillator",
+                options: { frequency: 660 },
+              },
+            },
+          ],
         },
-        inputs: [
-          { id: "osc1", name: "oscillator", options: { frequency: 440 } },
-          { id: "osc2", name: "oscillator", options: { frequency: 554.37586 } },
-          { id: "osc3", name: "oscillator", options: { frequency: 660 } },
-        ],
       },
     ],
   },

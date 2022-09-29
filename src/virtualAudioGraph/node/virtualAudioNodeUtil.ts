@@ -7,20 +7,27 @@ import {
   AudioNodeClassOptions,
   AudioNodeKind,
   AudioNodeName,
+  AudioNodeNameOfKind,
+  AudioParamName,
   getAudioNodeConfig,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import { ALL_AUDIO_NODES } from "@/nativeWebAudio/audioNode/audioNodes"
+import { virtualAudioParamUtil } from "../audioParam"
 import {
   CreateVirtualAudioNodeInput,
   CreateVirtualAudioNodeOptions,
   CreateVirtualAudioNodeOptionsOrReference,
   VirtualAudioNode,
+  VirtualAudioNodeInput,
   VirtualAudioNodeOfKind,
   VirtualAudioNodeReference,
 } from "./virtualAudioNode"
 
-type OrphanedReference = VirtualAudioNodeReference & { parentId: string }
+type OrphanedReference = VirtualAudioNodeReference & {
+  parentId: string
+  param?: AudioParamName
+}
 
 interface CreateVirtualAudioNodeInternalOptions<
   Name extends AudioNodeName,
@@ -76,19 +83,44 @@ const createVirtualAudioNode = <
     id: options.id || nanoid(),
     name: options.name,
     options: (options?.options as any) || {},
-    inputs: [],
+    inputs: [] as Name extends AudioNodeNameOfKind<"source">
+      ? []
+      : VirtualAudioNodeInput<Name, false>[],
+    params: {} as VirtualAudioNode<Name>["params"],
   }
 
   const resolvedRootId = rootId || node.id
 
-  if (options.inputs && !isAudioNodeNameOfKind(options.name, "source")) {
-    ;(node.inputs as any[]) = options?.inputs?.map((input) =>
-      createVirtualAudioNode({
-        options: input,
-        rootId: resolvedRootId,
-        idMap,
-        orphanedReferences,
-      })
+  if (options.inputs && !isAudioNodeNameOfKind(node.name, "source")) {
+    node.inputs =
+      (options?.inputs?.map((input) => {
+        if (virtualAudioNodeUtil.isReference(input.node)) {
+          orphanedReferences.push({
+            ...input.node,
+            parentId: node.id,
+          })
+          return input
+        }
+        return {
+          node: createVirtualAudioNode({
+            options: input.node as any,
+            rootId: resolvedRootId,
+            idMap,
+            orphanedReferences,
+          }),
+          param: input.param,
+        }
+      }) as any) || []
+  }
+
+  if (options.params) {
+    node.params = Object.entries(options.params).reduce<typeof node.params>(
+      (params, [paramName, paramOptions]) => {
+        params[paramName as AudioParamName<Name>] =
+          virtualAudioParamUtil.create(paramOptions as any)
+        return params
+      },
+      node.params
     )
   }
 
@@ -117,18 +149,17 @@ const createVirtualAudioNode = <
     )
 
     const nodeKind = getAudioNodeConfig(node.name).kind
-    if (nodeKind.length === 1 && nodeKind[0] === "source") {
+    if (nodeKind[0] === "source" && nodeKind.length === 1) {
       /** @todo maybe should be configurable on AudioNodeName basis with more AudioNodeConfig metadata about input/output constraints */
       logger.warn(
         `A source node cannot have an input (node ID ref: '${node.id}')`
       )
       parent.inputs.splice(parentInputIndex, 1)
     } else {
-      parent.inputs.splice(
-        parentInputIndex,
-        1,
-        node as VirtualAudioNodeOfKind<"source" | "effect">
-      )
+      parent.inputs.splice(parentInputIndex, 1, {
+        node: node as VirtualAudioNodeOfKind<"source" | "effect">,
+        param: ref.param,
+      })
     }
 
     orphanedReferences.splice(index, 1)
@@ -151,36 +182,32 @@ const DEFAULT_DESTINATION_NODE = {
   options: undefined,
 } as const
 
-type CreateDefaultDestinationOptions = { defaultDestination: true } & Pick<
-  CreateVirtualAudioNodeOptions<"audio-destination">,
+type CreateDefaultDestinationOptions<
+  AllowReferenceInput extends boolean = false
+> = { defaultDestination: true } & Pick<
+  CreateVirtualAudioNodeOptions<"audio-destination", AllowReferenceInput>,
   "inputs"
 >
 
 const createDefaultDestinationNode = (
-  inputs?: CreateVirtualAudioNodeInput[]
+  inputs?: CreateVirtualAudioNodeInput<AudioNodeName, true>[]
 ): VirtualAudioNode<"audio-destination"> =>
   createVirtualAudioNode({
     options: {
       ...DEFAULT_DESTINATION_NODE,
-      inputs:
-        inputs?.map((input) =>
-          createVirtualAudioNode({
-            options: input,
-            rootId: DEFAULT_DESTINATION_ID,
-          })
-        ) || [],
+      inputs,
     },
   })
 
 export type CreateRootOptions<Name extends AudioNodeName = AudioNodeName> =
-  | CreateDefaultDestinationOptions
+  | CreateDefaultDestinationOptions<true>
   | (CreateVirtualAudioNodeOptionsOrReference<Name> & {
       defaultDestination?: never
     })
 
-export const isDefaultDestination = (
+export const isDefaultDestinationOptions = (
   options: CreateRootOptions<AudioNodeName>
-): options is CreateDefaultDestinationOptions =>
+): options is CreateDefaultDestinationOptions<true> =>
   !!(options as CreateDefaultDestinationOptions).defaultDestination
 
 /** @todo doc and test */
@@ -189,7 +216,7 @@ const createRootVirtualAudioNode = <Name extends AudioNodeName>(
 ): typeof options extends CreateDefaultDestinationOptions
   ? VirtualAudioNode<"audio-destination">
   : VirtualAudioNode<Name> =>
-  isDefaultDestination(options)
+  isDefaultDestinationOptions(options)
     ? createDefaultDestinationNode(options.inputs)
     : (createVirtualAudioNode<CreateVirtualAudioNodeOptionsOrReference<Name>>(
         isVirtualAudioNodeReference(options)
