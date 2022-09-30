@@ -17,8 +17,8 @@ export type VirtualAudioNodeInput<
   AllowNodeReference extends boolean = false
 > = {
   node: AllowNodeReference extends true
-    ? VirtualAudioNodeReference | VirtualAudioNodeOfKind<"effect" | "source">
-    : VirtualAudioNodeOfKind<"effect" | "source">
+    ? VirtualAudioNode | VirtualAudioNodeReference
+    : VirtualAudioNode
   param?: AudioParamName<Name>
 }
 
@@ -28,9 +28,7 @@ export interface VirtualAudioNode<Name extends AudioNodeName = AudioNodeName> {
   name: Name
   options: AudioNodeClassOptions<Name>
   params: VirtualAudioParams<Name>
-  inputs: Name extends AudioNodeNameOfKind<"source">
-    ? []
-    : VirtualAudioNodeInput<Name>[]
+  inputs: VirtualAudioNodeInput<Name>[]
 }
 
 export type VirtualAudioNodeOfKind<Kind extends AudioNodeKind> =
@@ -47,12 +45,8 @@ export type CreateVirtualAudioNodeInput<
   AllowReferenceInput extends boolean = false
 > = {
   node: AllowReferenceInput extends true
-    ?
-        | VirtualAudioNodeReference
-        | CreateVirtualAudioNodeOptions<
-            AudioNodeNameOfKind<"effect" | "source">
-          >
-    : CreateVirtualAudioNodeOptions<AudioNodeNameOfKind<"effect" | "source">>
+    ? CreateVirtualAudioNodeOptionsOrReference
+    : CreateVirtualAudioNodeOptions
   param?: AudioParamName<Name>
 }
 
@@ -68,12 +62,7 @@ export type CreateVirtualAudioNodeOptions<
   /** The args object passed to the AudioNode class's second parameter, if available */
   options?: AudioNodeClassOptions<Name>
   /** A list of virtual nodes to create. These cannot be destination nodes, as they have 0 outputs */
-  inputs?: Name extends AudioNodeNameOfKind<"source">
-    ? []
-    : CreateVirtualAudioNodeInput<
-        AudioNodeNameOfKind<"source" | "effect">,
-        AllowReferenceInput
-      >[]
+  inputs?: CreateVirtualAudioNodeInput<AudioNodeName, AllowReferenceInput>[]
 
   idRef?: never
 }

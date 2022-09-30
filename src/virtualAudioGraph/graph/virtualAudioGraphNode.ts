@@ -5,13 +5,14 @@ import {
   AudioNodeKind,
   AudioNodeName,
   AudioNodeNameOfKind,
+  AudioParamName,
   getAudioNodeConfig,
 } from "@/nativeWebAudio"
+import { VirtualAudioParam } from "../audioParam"
 import {
   CreateVirtualAudioNodeOptionsOrReference,
   NarrowedVirtualAudioNode,
   VirtualAudioNode,
-  VirtualAudioNodeOfKind,
   virtualAudioNodeUtil,
 } from "../node"
 import { NodeRenderer } from "../renderer/nodeRenderer"
@@ -19,18 +20,49 @@ import { NodeLookupMap, resolveNodes } from "./lookupMap"
 /** WARNING: This is a circular dependency, but only used as a type, so it is tolerated */
 import { VirtualAudioGraph } from "./virtualAudioGraph"
 import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
+import { VirtualAudioGraphParam } from "./virtualAudioGraphParam"
 
 export type VirtualAudioGraphNodeOfKind<Kind extends AudioNodeKind> =
   VirtualAudioGraphNode<AudioNodeNameOfKind<Kind>>
 
-export type AddInputOptions<Name extends AudioNodeName> =
-  | CreateVirtualAudioNodeOptionsOrReference<Name>
-  | VirtualAudioGraphNode<Name>
+export type AddInputOptions<Name extends AudioNodeName> = {
+  node:
+    | CreateVirtualAudioNodeOptionsOrReference<Name>
+    | VirtualAudioGraphNode<Name>
+  param?: AudioParamName<Name>
+}
 
 export type NarrowedVirtualAudioGraphNode<
   Name extends AudioNodeName = AudioNodeName,
   Kind extends AudioNodeKind = AudioNodeKind
 > = VirtualAudioGraphNode<NarrowedVirtualAudioNode<Name, Kind>["name"]>
+
+export type VirtualAudioGraphInput<Name extends AudioNodeName = AudioNodeName> =
+  {
+    node: VirtualAudioGraphNode<Name>
+    param?: AudioParamName<Name>
+  }
+
+const hasExistingOutput = (
+  node: VirtualAudioGraphNode,
+  potentialOutput: VirtualAudioGraphNode | VirtualAudioNode,
+  param?: AudioParamName,
+  warn = false
+) => {
+  const hasOutput = !!node.outputs.find(
+    (output) =>
+      output.node.id === potentialOutput.id &&
+      (param === output.param || (!param && !output.param))
+  )
+  if (warn && hasOutput) {
+    logger.warn(
+      `Node '${node.id}' is already an input of ${
+        param ? `param '${param}' of ` : ""
+      }'${potentialOutput.id}'`
+    )
+  }
+  return hasOutput
+}
 
 export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   get id() {
@@ -63,6 +95,10 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
   get isPlaying() {
     return this.renderer.isPlaying
+  }
+
+  get params() {
+    return this._params
   }
 
   render() {
@@ -110,30 +146,37 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
     ...inputs: AddInputOptions<Name>[]
   ) {
     const newInputs = resolveNodes(
-      inputs,
+      inputs.map(({ node }) => node),
       this.lookupMap,
       this.graph,
       this.context
     )
-    for (const input of newInputs) {
-      const { kind } = getAudioNodeConfig(input.name)
-      if (kind.length === 1 && kind[0] === "destination") {
+    for (let i = 0; i < newInputs.length; i++) {
+      const inputNode = newInputs[i]
+      const inputParam = inputs.find(
+        ({ node }) =>
+          (virtualAudioNodeUtil.isReference(node) ? node.idRef : node.id) ===
+          inputNode.id
+      )?.param // in case lengths do not match
+      const { kind } = getAudioNodeConfig(inputNode.name)
+      if (kind.length === 1 && kind[0] === "destination" && !inputParam) {
         logger.warn(
           new Error(
-            `Cannot add destination node '${input.id}' as input to node '${this.id}' in graph ${this.graph.id}`
+            `Cannot add destination node '${inputNode.id}' as input to node '${this.id}' in graph ${this.graph.id}`
           )
         )
       } else {
-        this._inputs.push(
-          input as VirtualAudioGraphNodeOfKind<"effect" | "source">
-        )
+        this._inputs.push({
+          node: inputNode,
+          param: inputParam as AudioParamName,
+        })
       }
     }
   }
 
   destroy() {
-    this.inputs.forEach((input) => input.destroy())
-    this.outputs.forEach((output) => output.destroyInput(this.id))
+    this.inputs.forEach((input) => input.node.destroy())
+    this.outputs.forEach((output) => output.node.destroyInput(this.id))
     delete this.lookupMap[this.id]
     this._isDestroyed = true
     return this
@@ -142,7 +185,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   constructor(
     virtualNode: VirtualAudioNode<Name>,
     lookupMap: NodeLookupMap,
-    outputs: VirtualAudioGraphNode[],
+    outputs: VirtualAudioGraphInput[],
     graph: VirtualAudioGraph,
     private context: VirtualAudioGraphContext
   ) {
@@ -155,53 +198,78 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
     this.lookupMap = lookupMap
 
-    this._inputs = virtualNode.inputs.map((input) => this.resolveInput(input))
+    this._inputs = virtualNode.inputs.map((input) =>
+      this.resolveNewInput(input.node, input.param as any)
+    ) as VirtualAudioGraphInput<AudioNodeNameOfKind<"effect" | "source">>[]
 
     lookupMap[virtualNode.id] = this
 
     this._outputs = outputs
 
     this.renderer = new NodeRenderer(this, context)
+
+    this._params = Object.entries(virtualNode.params).reduce<
+      typeof this._params
+    >((params, [paramName, vParam]) => {
+      params[paramName as AudioParamName<Name>] = new VirtualAudioGraphParam(
+        paramName as AudioParamName<Name>,
+        vParam as VirtualAudioParam,
+        this
+      )
+      return params
+    }, {} as typeof this._params)
   }
 
-  protected addOutput(output: VirtualAudioGraphNode) {
-    this._outputs.push(output)
+  protected addOutput(output: VirtualAudioGraphNode, param?: AudioParamName) {
+    if (!hasExistingOutput(this, output, param, true)) {
+      this._outputs.push()
+    }
   }
 
-  protected destroyInput(nodeId: string) {
-    const index = this._inputs.findIndex(({ id }) => id === nodeId)
+  protected destroyInput(nodeId: string, _index: number | null = null) {
+    const index =
+      typeof _index === "number"
+        ? _index
+        : this._inputs.findIndex(({ node: { id } }) => id === nodeId)
     if (index === -1) {
       logger.warn(
         `Node ID '${nodeId}' not found in inputs of node ID '${this.id}'`
-      ) /** @todo verbosity-configurable logger */
+      )
       return
     }
-    this._inputs[index].destroy()
-    this.inputs.splice(
-      this.inputs.findIndex(({ id }) => id === nodeId),
-      1
+    this._inputs[index].node.destroy()
+    this._inputs.splice(index, 1)
+    const nextIndex = this._inputs.findIndex(
+      ({ node: { id } }) => id === nodeId
     )
+    if (nextIndex > -1) {
+      this.destroyInput(nodeId, nextIndex)
+    }
   }
 
-  private resolveInput(
-    vNode: VirtualAudioNodeOfKind<"effect" | "source">
-  ): VirtualAudioGraphNodeOfKind<"effect" | "source"> {
+  private resolveNewInput(
+    vNode: VirtualAudioNode,
+    param?: AudioParamName
+  ): VirtualAudioGraphInput {
     const existing = this.lookupMap[vNode.id]
     if (existing) {
-      if (existing.outputs.find((output) => output === this)) {
-        logger.warn(`Node '${vNode.id}' is already an input of '${this.id}'`)
-      } else {
-        existing.addOutput(this)
+      existing.addOutput(this, param)
+      return {
+        node: existing,
+        param,
       }
-      return existing as VirtualAudioGraphNodeOfKind<"effect" | "source">
     }
-    return new VirtualAudioGraphNode<AudioNodeNameOfKind<"effect" | "source">>(
-      vNode,
-      this.lookupMap,
-      [this],
-      this.graph,
-      this.context
-    )
+
+    return {
+      node: new VirtualAudioGraphNode(
+        vNode,
+        this.lookupMap,
+        [{ node: this, param }],
+        this.graph,
+        this.context
+      ),
+      param,
+    }
   }
 
   private _isDestroyed = false
@@ -209,10 +277,11 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   private _name: Name
   private _options: AudioNodeClassOptions<Name>
   private _virtualNode: VirtualAudioNode<Name>
-  private _inputs: VirtualAudioGraphNode<
-    AudioNodeNameOfKind<"effect" | "source">
-  >[] = []
-  private _outputs: VirtualAudioGraphNode[]
+  private _params: {
+    [Key in AudioParamName<Name>]: VirtualAudioGraphParam<Name>
+  }
+  private _inputs: VirtualAudioGraphInput[] = []
+  private _outputs: VirtualAudioGraphInput[]
   private lookupMap: NodeLookupMap
   private graph: VirtualAudioGraph
   private renderer: NodeRenderer<Name>

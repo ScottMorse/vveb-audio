@@ -83,9 +83,7 @@ const createVirtualAudioNode = <
     id: options.id || nanoid(),
     name: options.name,
     options: (options?.options as any) || {},
-    inputs: [] as Name extends AudioNodeNameOfKind<"source">
-      ? []
-      : VirtualAudioNodeInput<Name, false>[],
+    inputs: [] as VirtualAudioNodeInput<Name, false>[],
     params: {} as VirtualAudioNode<Name>["params"],
   }
 
@@ -157,7 +155,7 @@ const createVirtualAudioNode = <
       parent.inputs.splice(parentInputIndex, 1)
     } else {
       parent.inputs.splice(parentInputIndex, 1, {
-        node: node as VirtualAudioNodeOfKind<"source" | "effect">,
+        node: node,
         param: ref.param,
       })
     }

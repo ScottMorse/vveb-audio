@@ -74,10 +74,7 @@ export class VirtualAudioGraph {
     ExpectedKind extends AudioNodeKind = AudioNodeKind
   >(nodeId: string, warn = false) {
     const node = this.lookupMap[nodeId]
-    if (warn && !node)
-      logger.warn(
-        `Node ID '${nodeId}' in graph '${this.id}'`
-      ) /** @todo verbosity-configurable logger */
+    if (warn && !node) logger.warn(`Node ID '${nodeId}' in graph '${this.id}'`)
     return (
       (node as NarrowedVirtualAudioGraphNode<ExpectedName, ExpectedKind>) ||
       null
