@@ -3,6 +3,7 @@ import {
   AudioNodeInstance,
   AudioNodeName,
   AudioNodeNameOfKind,
+  AudioParamName,
   createAudioNode,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
@@ -83,39 +84,54 @@ export class NodeRenderer<Name extends AudioNodeName> {
     existingAudioNode: AudioNode,
     newAudioNode: AudioNode
   ) {
-    this.virtualNode.outputs.forEach((outputNode) => {
-      if (!outputNode.audioNode) {
-        outputNode.render()
+    this.virtualNode.outputs.forEach(
+      ({ node: outputNode, param: outputParam }) => {
+        if (!outputNode.audioNode) {
+          outputNode.render()
+        }
+        logger.debug(
+          `Reconnecting '${this.virtualNode.id}' to ${
+            outputParam ? `param '${outputParam}' of ` : ""
+          }output node '${outputNode.id}'`,
+          { node: this }
+        )
+        const targetNode = outputNode.audioNode as AudioNode
+        newAudioNode.connect(
+          outputParam ? targetNode[outputParam as AudioParamName] : targetNode
+        )
       }
-      logger.debug(
-        `Reconnecting '${this.virtualNode.id}' to output node '${outputNode.id}'`,
-        { node: this }
-      )
-      newAudioNode.connect(outputNode.audioNode as AudioNode)
-    })
-    this.virtualNode.inputs.forEach((inputNode) => {
-      logger.debug(
-        `Disconnecting input node '${inputNode.id}' from '${this.virtualNode.id}'`,
-        { node: this }
-      )
-      inputNode.audioNode?.disconnect(existingAudioNode)
-    })
+    )
+    this.virtualNode.inputs.forEach(
+      ({ node: inputNode, param: inputParam }) => {
+        logger.debug(
+          `Disconnecting input node '${inputNode.id}' from ${
+            inputParam ? `param '${inputParam}' of ` : ""
+          }'${this.virtualNode.id}'`,
+          { node: this }
+        )
+        inputNode.audioNode?.disconnect(
+          inputParam
+            ? existingAudioNode[inputParam as AudioParamName]
+            : existingAudioNode
+        )
+      }
+    )
   }
 
   private connectInputs(newAudioNode: AudioNode) {
-    this.virtualNode.inputs.forEach((inputNode) => {
-      if (!inputNode.audioNode) {
-        inputNode.render()
+    this.virtualNode.inputs.forEach(({ node: input }) => {
+      if (!input.audioNode) {
+        input.render()
       }
       logger.debug(
-        `Connecting input node '${inputNode.id}' to '${this.virtualNode.id}'`,
+        `Connecting input node '${input.id}' to '${this.virtualNode.id}'`,
         {
           id: this.virtualNode.id,
-          inputNode,
+          inputNode: input,
           newAudioNode,
         }
       )
-      inputNode.audioNode?.connect(newAudioNode)
+      input.audioNode?.connect(newAudioNode)
     })
   }
 
@@ -129,9 +145,27 @@ export class NodeRenderer<Name extends AudioNodeName> {
     return forceRerender || !this._audioNode
   }
 
+  /** @todo  break me up */
   private canPlay(): this is NodeRenderer<AudioNodeNameOfKind<"source">> {
     if (!isAudioNodeNameOfKind(this.virtualNode.name, "source")) {
       return this.warnCannotPlay(`it is not a source node`)
+    }
+    if (this.context.audioContext?.state !== "running") {
+      if (!this.context.canStart) {
+        return this.warnCannotPlay(
+          `the context cannot start until the user has interacted with the page`
+        )
+      } else {
+        if (!this.context.audioContext) {
+          this.context.render()
+        }
+        if (
+          this.context.audioContext &&
+          "resume" in this.context.audioContext
+        ) {
+          ;(this.context.audioContext as AudioContext).resume()
+        }
+      }
     }
     if (!this._audioNode) {
       this.render()

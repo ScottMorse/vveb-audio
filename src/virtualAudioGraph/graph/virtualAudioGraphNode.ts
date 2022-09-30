@@ -214,7 +214,8 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
       params[paramName as AudioParamName<Name>] = new VirtualAudioGraphParam(
         paramName as AudioParamName<Name>,
         vParam as VirtualAudioParam,
-        this
+        this,
+        this.renderer
       )
       return params
     }, {} as typeof this._params)

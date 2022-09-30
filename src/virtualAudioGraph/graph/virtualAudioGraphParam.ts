@@ -1,6 +1,6 @@
 import { AudioNodeName, AudioParamName } from "@/nativeWebAudio"
 import { VirtualAudioParam } from "../audioParam"
-import { VirtualAudioNode } from "../node"
+import { NodeRenderer } from "../renderer/nodeRenderer"
 import { VirtualAudioGraphNode } from "./virtualAudioGraphNode"
 
 export class VirtualAudioGraphParam<Name extends AudioNodeName> {
@@ -32,11 +32,25 @@ export class VirtualAudioGraphParam<Name extends AudioNodeName> {
     return this._virtualParam.automationRate
   }
 
+  refreshValues() {
+    const audioNode = this._nodeRenderer.audioNode
+    if (audioNode) {
+      const param = audioNode[this._name] as AudioParam
+      Object.assign(this._virtualParam, {
+        value: param.value,
+        maxValue: param.maxValue,
+        minValue: param.minValue,
+        defaultValue: param.defaultValue,
+        automationRate: param.automationRate,
+      })
+    }
+  }
+
   /** @todo remove eslint-disable once methods implemented  */
   /* eslint-disable @typescript-eslint/no-unused-vars */
 
   cancelAndHoldAtTime(cancelTime: number) {
-    return this
+    return this._node.params
   }
 
   cancelScheduledValues(cancelTime: number) {
@@ -72,6 +86,7 @@ export class VirtualAudioGraphParam<Name extends AudioNodeName> {
   constructor(
     private _name: AudioParamName<Name>,
     private _virtualParam: VirtualAudioParam,
-    private _node: VirtualAudioGraphNode
+    private _node: VirtualAudioGraphNode,
+    private _nodeRenderer: NodeRenderer<Name>
   ) {}
 }

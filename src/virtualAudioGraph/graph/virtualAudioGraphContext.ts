@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger"
 import { AudioContextName } from "@/nativeWebAudio"
 import { VirtualAudioContext } from "../context"
 import {
@@ -26,8 +27,12 @@ export class VirtualAudioGraphContext<
     return this.renderer.audioContext
   }
 
-  get canRender() {
-    return this.renderer.canRender
+  get canStart() {
+    return this.renderer.canStart
+  }
+
+  get isDestroyed() {
+    return this._isDestroyed
   }
 
   render() {
@@ -59,6 +64,10 @@ export class VirtualAudioGraphContext<
     return this
   }
 
+  destroy() {
+    logger.warnNotImplemented()
+  }
+
   constructor(private virtualContext: VirtualAudioContext<Name>) {
     this.virtualContext = virtualContext
     this._id = virtualContext.id
@@ -72,4 +81,6 @@ export class VirtualAudioGraphContext<
   private _options: DefinedAudioContextClassOptions<Name>
 
   private renderer: ContextRenderer
+
+  private _isDestroyed = false
 }

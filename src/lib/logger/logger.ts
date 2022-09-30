@@ -91,6 +91,10 @@ export class Logger {
     }
   }
 
+  warnNotImplemented() {
+    this.warn(new Error("Not implemented"))
+  }
+
   get printLevel() {
     return this.resolvePrintLevel()
   }

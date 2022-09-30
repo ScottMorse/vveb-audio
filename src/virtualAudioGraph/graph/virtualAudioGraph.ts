@@ -42,18 +42,20 @@ export class VirtualAudioGraph {
     return this._isRendered
   }
 
+  get isDestroyed() {
+    return this._isDestroyed
+  }
+
   render() {
-    if (this._context.canRender && !this._isRendered) {
+    if (this._isDestroyed) {
+      logger.warn(`Cannot render destroyed graph '${this.id}'`)
+      return
+    }
+    if (!this._isRendered) {
       this._context.render()
       this.roots.forEach((rootNode) => rootNode.render())
       this._isRendered = true
       logger.info(`Rendered virtual audio graph '${this.id}'`)
-    } else if (!this._context.canRender) {
-      logger.warn(
-        new Error(
-          `Cannot render virtual audio graph '${this.id}' until user has interacted with the page`
-        )
-      )
     }
   }
 
@@ -88,6 +90,17 @@ export class VirtualAudioGraph {
     }
   }
 
+  destroy() {
+    this.roots.forEach((root) => root.destroy())
+    this.context.destroy()
+
+    this._roots = []
+    this.lookupMap = {}
+
+    this._isDestroyed = true
+    this._isRendered = false
+  }
+
   constructor(
     roots: VirtualAudioGraphNodeArg[],
     context: CreateVirtualAudioContextOptions,
@@ -100,11 +113,11 @@ export class VirtualAudioGraph {
     )
     this._roots = resolveNodes(roots, this.lookupMap, this, this._context)
 
-    if (autoRender) {
-      this.autoRender()
-    }
-
     logger.info(`Created virtual audio graph '${this.id}'`, { roots, context })
+
+    if (autoRender) {
+      this.render()
+    }
   }
 
   private deleteRoot(rootId: string) {
@@ -114,24 +127,12 @@ export class VirtualAudioGraph {
     )
   }
 
-  private autoRender() {
-    const listener = getCanAudioContextStartListener()
-    const doIt = () => {
-      logger.debug(`Auto-rendering virtual audio graph '${this.id}'`)
-      this.render()
-    }
-    if (listener.canStart) {
-      doIt()
-    } else {
-      listener.on("canStart", doIt)
-    }
-  }
-
   private _id: string
   private _roots: VirtualAudioGraphNode[] = []
   private _context: VirtualAudioGraphContext
   private _isRendered = false
   private lookupMap: NodeLookupMap = {}
+  private _isDestroyed = false
 }
 
 export type CreateVirtualAudioGraphOptions = {
