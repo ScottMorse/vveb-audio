@@ -42,3 +42,7 @@ export type AudioNodeClassOptions<Name extends AudioNodeName = AudioNodeName> =
 export type AudioNodeClassOptionsOfKind<
   Kind extends AudioNodeKind = AudioNodeKind
 > = AudioNodeClassOptions<AudioNodeNameOfKind<Kind>>
+
+export type AudioNodeClassOptionsWithoutParams<
+  Name extends AudioNodeName = AudioNodeName
+> = Omit<AudioNodeClassOptions<Name>, AudioParamName<Name>>

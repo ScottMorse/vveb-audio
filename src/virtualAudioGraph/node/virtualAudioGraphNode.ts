@@ -8,19 +8,18 @@ import {
   AudioParamName,
   getAudioNodeConfig,
 } from "@/nativeWebAudio"
-import { VirtualAudioParam } from "../audioParam"
+import { VirtualAudioGraphContext } from "../context"
+import { VirtualAudioGraph } from "../graph"
+import { NodeLookupMap, resolveNodes } from "../graph/lookupMap"
+import { VirtualAudioParam, VirtualAudioGraphParam } from "../param"
+import { AudioNodeRenderer } from "./audioNodeRenderer"
 import {
   CreateVirtualAudioNodeOptionsOrReference,
   NarrowedVirtualAudioNode,
   VirtualAudioNode,
   virtualAudioNodeUtil,
-} from "../node"
-import { NodeRenderer } from "../renderer/nodeRenderer"
-import { NodeLookupMap, resolveNodes } from "./lookupMap"
+} from "."
 /** WARNING: This is a circular dependency, but only used as a type, so it is tolerated */
-import { VirtualAudioGraph } from "./virtualAudioGraph"
-import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
-import { VirtualAudioGraphParam } from "./virtualAudioGraphParam"
 
 export type VirtualAudioGraphNodeOfKind<Kind extends AudioNodeKind> =
   VirtualAudioGraphNode<AudioNodeNameOfKind<Kind>>
@@ -206,7 +205,7 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
     this._outputs = outputs
 
-    this.renderer = new NodeRenderer(this, context)
+    this.renderer = new AudioNodeRenderer(this, context)
 
     this._params = Object.entries(virtualNode.params).reduce<
       typeof this._params
@@ -215,7 +214,8 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
         paramName as AudioParamName<Name>,
         vParam as VirtualAudioParam,
         this,
-        this.renderer
+        this.renderer,
+        this.context
       )
       return params
     }, {} as typeof this._params)
@@ -285,5 +285,5 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
   private _outputs: VirtualAudioGraphInput[]
   private lookupMap: NodeLookupMap
   private graph: VirtualAudioGraph
-  private renderer: NodeRenderer<Name>
+  private renderer: AudioNodeRenderer<Name>
 }

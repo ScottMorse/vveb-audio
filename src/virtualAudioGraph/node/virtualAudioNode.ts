@@ -5,10 +5,7 @@ import {
   AudioNodeNameOfKind,
   AudioParamName,
 } from "@/nativeWebAudio"
-import {
-  CreateVirtualAudioParamOptions,
-  VirtualAudioParams,
-} from "../audioParam"
+import { CreateVirtualAudioParamOptions, VirtualAudioParams } from "../param"
 
 export type VirtualAudioInputConnection = "node" | "param"
 

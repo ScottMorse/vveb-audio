@@ -7,13 +7,14 @@ import {
   createAudioNode,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
-import { VirtualAudioGraphNode } from "../graph"
-import { VirtualAudioGraphContext } from "../graph/virtualAudioGraphContext"
-import { DEFAULT_DESTINATION_ID } from "../node"
+import { VirtualAudioGraphContext } from "../context"
+import { VirtualAudioGraphParam, VirtualAudioParam } from "../param"
+import { VirtualAudioGraphNode } from "."
+import { DEFAULT_DESTINATION_ID } from "."
 
 const logger = new Logger({ contextName: "Renderer" })
 
-export class NodeRenderer<Name extends AudioNodeName> {
+export class AudioNodeRenderer<Name extends AudioNodeName> {
   get audioNode() {
     return this._audioNode
   }
@@ -29,6 +30,18 @@ export class NodeRenderer<Name extends AudioNodeName> {
     logger.debug(`Rendering node '${this.virtualNode.id}'`, { node: this })
     const audioNode = this.createAudioNode()
     logger.debug(`Created audio node '${this.virtualNode.id}'`, { node: this })
+
+    for (const [paramName, paramOptions] of Object.entries(
+      this.virtualNode.params
+    )) {
+      const param = audioNode[paramName as AudioParamName] as AudioParam
+      const virtualParam = paramOptions as VirtualAudioGraphParam
+      if (param) {
+        param.value = virtualParam.value
+        param.automationRate = virtualParam.automationRate
+        virtualParam.refreshValues()
+      }
+    }
 
     if (existingNode) {
       this.cleanUpAudioNode()
@@ -146,7 +159,7 @@ export class NodeRenderer<Name extends AudioNodeName> {
   }
 
   /** @todo  break me up */
-  private canPlay(): this is NodeRenderer<AudioNodeNameOfKind<"source">> {
+  private canPlay(): this is AudioNodeRenderer<AudioNodeNameOfKind<"source">> {
     if (!isAudioNodeNameOfKind(this.virtualNode.name, "source")) {
       return this.warnCannotPlay(`it is not a source node`)
     }

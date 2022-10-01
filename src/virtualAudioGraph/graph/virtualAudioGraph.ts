@@ -9,21 +9,19 @@ import {
   CreateVirtualAudioContextOptions,
   virtualAudioContextUtil,
 } from "../context"
+import { VirtualAudioGraphContext } from "../context"
 import {
   CreateRootOptions,
   IsVirtualAudioNodeOptions,
   virtualAudioNodeUtil,
+  NarrowedVirtualAudioGraphNode,
+  VirtualAudioGraphNode,
 } from "../node"
 import {
   NodeLookupMap,
   resolveNodes,
   VirtualAudioGraphNodeArg,
 } from "./lookupMap"
-import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
-import {
-  NarrowedVirtualAudioGraphNode,
-  VirtualAudioGraphNode,
-} from "./virtualAudioGraphNode"
 
 export class VirtualAudioGraph {
   get id() {
@@ -116,7 +114,17 @@ export class VirtualAudioGraph {
     logger.info(`Created virtual audio graph '${this.id}'`, { roots, context })
 
     if (autoRender) {
+      setTimeout(() => this.autoRender())
+    }
+  }
+
+  private autoRender() {
+    const listener = getCanAudioContextStartListener()
+
+    if (listener.canStart) {
       this.render()
+    } else {
+      listener.on("canStart", () => this.render())
     }
   }
 

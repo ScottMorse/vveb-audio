@@ -9,15 +9,17 @@ import {
   AudioNodeName,
   AudioNodeNameOfKind,
   AudioParamName,
+  discoverDefaultAudioParams,
   getAudioNodeConfig,
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import { ALL_AUDIO_NODES } from "@/nativeWebAudio/audioNode/audioNodes"
-import { virtualAudioParamUtil } from "../audioParam"
+import { virtualAudioParamUtil } from "../param"
 import {
   CreateVirtualAudioNodeInput,
   CreateVirtualAudioNodeOptions,
   CreateVirtualAudioNodeOptionsOrReference,
+  CreateVirtualAudioNodeParams,
   VirtualAudioNode,
   VirtualAudioNodeInput,
   VirtualAudioNodeOfKind,
@@ -111,15 +113,41 @@ const createVirtualAudioNode = <
       }) as any) || []
   }
 
-  if (options.params) {
-    node.params = Object.entries(options.params).reduce<typeof node.params>(
+  const defaultParams = discoverDefaultAudioParams(node.name)
+
+  if (options.options) {
+    for (const classOptionKey of Object.keys(options.options)) {
+      const param = defaultParams[classOptionKey as keyof typeof defaultParams]
+      if (param instanceof AudioParam) {
+        if (options.params?.[classOptionKey as keyof typeof options.params]) {
+          logger.warn(
+            `You set the value of ${classOptionKey} in both options and params. The value in params will be used. (node: '${node.name}', id: '${node.id}')`
+          )
+        }
+        options.params = options.params || {}
+        ;(options.params as any)[classOptionKey] = {
+          nodeName: node.name,
+          name: classOptionKey as keyof typeof options.params,
+          value: (options.options as any)[classOptionKey],
+        }
+      }
+    }
+  }
+
+  node.params = {
+    ...defaultParams,
+    ...Object.entries(options.params || {}).reduce<Partial<typeof node.params>>(
       (params, [paramName, paramOptions]) => {
         params[paramName as AudioParamName<Name>] =
-          virtualAudioParamUtil.create(paramOptions as any)
+          virtualAudioParamUtil.create({
+            nodeName: node.name,
+            name: paramName as AudioParamName<Name>,
+            ...(paramOptions as any),
+          })
         return params
       },
       node.params
-    )
+    ),
   }
 
   idMap[node.id] = node

@@ -30,7 +30,11 @@ const myGraph = createVirtualAudioGraph({
               node: {
                 id: "osc2",
                 name: "oscillator",
-                options: { frequency: 554.37586 },
+                params: {
+                  frequency: {
+                    value: 554.37586,
+                  },
+                },
               },
             },
             {
@@ -48,6 +52,8 @@ const myGraph = createVirtualAudioGraph({
   context: { id: "my-context", name: "default" },
   autoRender: true,
 })
+
+;(window as any).graph = myGraph
 
 const listener = getCanAudioContextStartListener()
 
@@ -67,7 +73,13 @@ export const App = () => {
     if (isPlaying) {
       setTimeout(() => {
         if (canStartRef.current) {
-          myGraph.getNodes({ kind: "source" }).forEach((node) => node?.start())
+          myGraph.getNodes({ name: "oscillator" }).forEach((node) => {
+            node.start()
+            node.params.frequency.setValueAtTime(
+              256,
+              myGraph.context.audioContext!.currentTime + 2
+            )
+          })
         }
       })
     } else {

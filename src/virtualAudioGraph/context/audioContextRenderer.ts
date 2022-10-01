@@ -3,11 +3,11 @@ import {
   createAudioContext,
   getCanAudioContextStartListener,
 } from "@/nativeWebAudio"
-import { VirtualAudioGraphContext } from "../graph/virtualAudioGraphContext"
+import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
 
 const logger = new Logger({ contextName: "Renderer" })
 
-export class ContextRenderer {
+export class AudioContextRenderer {
   get canStart() {
     return this._canStart
   }

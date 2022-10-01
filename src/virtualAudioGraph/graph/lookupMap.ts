@@ -1,5 +1,6 @@
 import { logger } from "@/lib/logger"
 import { AudioNodeName } from "@/nativeWebAudio"
+import { VirtualAudioGraphContext } from "../context"
 import {
   CreateRootOptions,
   DEFAULT_DESTINATION_ID,
@@ -8,9 +9,8 @@ import {
 } from "../node"
 
 /** WARNING: The following two imports are circular but imports are only used as types */
+import { VirtualAudioGraphNode } from "../node"
 import { VirtualAudioGraph } from "./virtualAudioGraph"
-import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
-import { VirtualAudioGraphNode } from "./virtualAudioGraphNode"
 
 export type NodeLookupMap = {
   [nodeId in string]?: VirtualAudioGraphNode
