@@ -5,7 +5,7 @@ import {
 } from "@/nativeWebAudio"
 import { VirtualAudioGraphContext } from "./virtualAudioGraphContext"
 
-const logger = new Logger({ contextName: "Renderer" })
+const logger = new Logger({ contextName: "AudioContextRenderer" })
 
 export class AudioContextRenderer {
   get canStart() {

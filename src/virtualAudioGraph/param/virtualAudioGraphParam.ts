@@ -1,8 +1,10 @@
-import { logger } from "@/lib/logger"
+import { Logger } from "@/lib/logger"
 import { AudioNodeName, AudioParamName } from "@/nativeWebAudio"
 import { VirtualAudioGraphContext } from "../context"
 import { VirtualAudioGraphNode, AudioNodeRenderer } from "../node"
 import { VirtualAudioParam } from "./virtualAudioParam"
+
+const logger = new Logger({ contextName: "VirtualAudioGraphParam" })
 
 export type VirtualAudioGraphParamCallback<
   Name extends AudioNodeName = AudioNodeName
@@ -55,7 +57,7 @@ export class VirtualAudioGraphParam<
     }
   }
 
-  refreshValues() {
+  syncValuesWithRealParam() {
     const audioNode = this._nodeRenderer.audioNode
     if (audioNode) {
       const param = audioNode[this._name] as AudioParam
@@ -64,10 +66,12 @@ export class VirtualAudioGraphParam<
         automationRate: param.automationRate,
       })
       logger.debug(
-        `Refreshed audio node param '${this._name as string}' of node '${
+        `Synced virtual audio node param '${this._name as string}' of node '${
           this._node.id
-        }'`
+        }' with its AudioParam`,
+        { virtualParam: this._virtualParam, param }
       )
+      return param
     }
   }
 
@@ -157,6 +161,13 @@ export class VirtualAudioGraphParam<
     return this
   }
 
+  cancelCallbacks() {
+    for (const timeoutId of Object.keys(this._callbackTimeouts)) {
+      clearTimeout(timeoutId as any)
+      delete this._callbackTimeouts[timeoutId]
+    }
+  }
+
   constructor(
     private _name: AudioParamName<Name>,
     private _virtualParam: VirtualAudioParam,
@@ -171,9 +182,9 @@ export class VirtualAudioGraphParam<
     callback?: VirtualAudioGraphParamCallback<Name>
   ) {
     if (this._context.audioContext) {
-      const ms = (time - this._context.audioContext.currentTime) * 1000
-      setTimeout(() => {
-        this.refreshValues()
+      const ms = (time - this._context.audioContext.currentTime) * 1000 + 10
+      const timeout: number = setTimeout(() => {
+        this.syncValuesWithRealParam()
         callback?.({
           param: this,
         })
@@ -181,9 +192,11 @@ export class VirtualAudioGraphParam<
           `Audio param estimated callback for '${
             this._name as string
           }' of node '${this._node.id}': ${logName}`,
-          { time, ms }
+          { time, ms, virtualParam: this }
         )
-      }, ms)
+        delete this._callbackTimeouts[timeout]
+      }, ms) as any
+      this._callbackTimeouts[timeout] = true
     } else {
       logger.warn(`Cannot updateAtEstimatedTime: AudioContext is not rendered`)
     }
@@ -202,4 +215,6 @@ export class VirtualAudioGraphParam<
     }
     return null
   }
+
+  private _callbackTimeouts: { [key: string | number]: true } = {}
 }

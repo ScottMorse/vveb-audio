@@ -110,6 +110,9 @@ export class VirtualAudioGraphNode<Name extends AudioNodeName = AudioNodeName> {
 
   stop() {
     this.renderer.stop()
+    Object.values(this.params).forEach((param) =>
+      (param as VirtualAudioGraphParam).cancelCallbacks()
+    )
   }
 
   updateOptions(options: DeeplyPartial<AudioNodeClassOptions<Name>>) {

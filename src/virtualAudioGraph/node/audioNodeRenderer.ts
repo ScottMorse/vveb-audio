@@ -8,12 +8,11 @@ import {
   isAudioNodeNameOfKind,
 } from "@/nativeWebAudio"
 import { VirtualAudioGraphContext } from "../context"
-import { VirtualAudioGraphParam, VirtualAudioParam } from "../param"
+import { VirtualAudioGraphParam } from "../param"
 import { VirtualAudioGraphNode } from "."
 import { DEFAULT_DESTINATION_ID } from "."
 
-const logger = new Logger({ contextName: "Renderer" })
-
+const logger = new Logger({ contextName: "AudioNodeRenderer" })
 export class AudioNodeRenderer<Name extends AudioNodeName> {
   get audioNode() {
     return this._audioNode
@@ -39,7 +38,7 @@ export class AudioNodeRenderer<Name extends AudioNodeName> {
       if (param) {
         param.value = virtualParam.value
         param.automationRate = virtualParam.automationRate
-        virtualParam.refreshValues()
+        virtualParam.syncValuesWithRealParam()
       }
     }
 

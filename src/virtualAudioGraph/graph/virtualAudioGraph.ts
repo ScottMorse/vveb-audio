@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid"
-import { logger } from "@/lib/logger"
+import { Logger } from "@/lib/logger"
 import {
   AudioNodeKind,
   AudioNodeName,
@@ -22,6 +22,8 @@ import {
   resolveNodes,
   VirtualAudioGraphNodeArg,
 } from "./lookupMap"
+
+const logger = new Logger({ contextName: "VirtualAudioGraph" })
 
 export class VirtualAudioGraph {
   get id() {
@@ -97,6 +99,8 @@ export class VirtualAudioGraph {
 
     this._isDestroyed = true
     this._isRendered = false
+
+    logger.info(`Destroyed virtual audio graph '${this.id}'`)
   }
 
   constructor(
@@ -121,10 +125,15 @@ export class VirtualAudioGraph {
   private autoRender() {
     const listener = getCanAudioContextStartListener()
 
-    if (listener.canStart) {
+    const render = () => {
+      logger.debug(`Auto-rendering graph '${this.id}'`)
       this.render()
+    }
+
+    if (listener.canStart) {
+      render()
     } else {
-      listener.on("canStart", () => this.render())
+      listener.on("canStart", render)
     }
   }
 

@@ -19,7 +19,6 @@ import {
   CreateVirtualAudioNodeInput,
   CreateVirtualAudioNodeOptions,
   CreateVirtualAudioNodeOptionsOrReference,
-  CreateVirtualAudioNodeParams,
   VirtualAudioNode,
   VirtualAudioNodeInput,
   VirtualAudioNodeOfKind,
@@ -30,7 +29,6 @@ type OrphanedReference = VirtualAudioNodeReference & {
   parentId: string
   param?: AudioParamName
 }
-
 interface CreateVirtualAudioNodeInternalOptions<
   Name extends AudioNodeName,
   Options extends CreateVirtualAudioNodeOptionsOrReference<Name>
