@@ -19,7 +19,7 @@ export class AudioContextRenderer {
   render() {
     logger.debug(`Rendering context '${this.virtualContext.id}'`)
     this._audioContext = createAudioContext(
-      this.virtualContext.name,
+      this.virtualContext.kind,
       this.virtualContext.options
     )
     logger.debug(`Created audio context '${this.virtualContext.id}'`)

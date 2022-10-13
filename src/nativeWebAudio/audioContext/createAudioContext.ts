@@ -18,6 +18,11 @@ const resolveMainContext = () => {
   return MAIN_CONTEXT
 }
 
+export type CreateAudioContextKind = keyof CreateAudioContextKindMap
+
+export type CreateAudioContextName<K extends CreateAudioContextKind> =
+  CreateAudioContextKindMap[K]
+
 /**
  * Create an audio context from its name 'normal' (`AudioContext`) or 'offline' (`OfflineAudioContext`),
  * or use 'main'.
@@ -27,16 +32,14 @@ const resolveMainContext = () => {
  *
  * @todo Custom extensions of BaseAudioContext should be supported.
  */
-export const createAudioContext = <
-  Kind extends keyof CreateAudioContextKindMap
->(
+export const createAudioContext = <Kind extends CreateAudioContextKind>(
   contextKind: Kind,
   ...[options]: AudioContextClassOptions<
-    CreateAudioContextKindMap[Kind]
+    CreateAudioContextName<Kind>
   > extends undefined
     ? [never]
-    : [AudioContextClassOptions<CreateAudioContextKindMap[Kind]>]
-): AudioContextInstance<CreateAudioContextKindMap[Kind]> => {
+    : [AudioContextClassOptions<CreateAudioContextName<Kind>>]
+): AudioContextInstance<CreateAudioContextName<Kind>> => {
   if (contextKind === "main") {
     return resolveMainContext() as any
   }

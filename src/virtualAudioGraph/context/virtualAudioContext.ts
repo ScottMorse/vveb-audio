@@ -1,76 +1,80 @@
 import mergeWith from "lodash/mergeWith"
 import { nanoid } from "nanoid"
 import { DeeplyPartial } from "@/lib/util/types"
-import { AudioContextClassOptions, AudioContextName } from "@/nativeWebAudio"
+import {
+  AudioContextClassOptions,
+  CreateAudioContextKind,
+  CreateAudioContextName,
+} from "@/nativeWebAudio"
 
 export type DefinedAudioContextClassOptions<
-  Name extends AudioContextName = AudioContextName
-> = Exclude<AudioContextClassOptions<Name>, undefined>
+  Kind extends CreateAudioContextKind = CreateAudioContextKind
+> = Exclude<AudioContextClassOptions<CreateAudioContextName<Kind>>, undefined>
 
 export interface VirtualAudioContext<
-  Name extends AudioContextName = AudioContextName
+  Kind extends CreateAudioContextKind = CreateAudioContextKind
 > {
   id: string
-  name: Name
-  options: DefinedAudioContextClassOptions<Name>
+  kind: Kind
+  options: DefinedAudioContextClassOptions<CreateAudioContextName<Kind>>
 }
 
 export type CreateVirtualAudioContextOptions<
-  Name extends AudioContextName = AudioContextName
+  Kind extends CreateAudioContextKind = CreateAudioContextKind
 > = {
   id?: string
-  name: Name
-} & (undefined extends AudioContextClassOptions<Name>
-  ? { options?: AudioContextClassOptions<Name> }
-  : { options: AudioContextClassOptions<Name> })
+  kind: Kind
+} & (undefined extends AudioContextClassOptions<CreateAudioContextName<Kind>>
+  ? { options?: AudioContextClassOptions<CreateAudioContextName<Kind>> }
+  : { options: AudioContextClassOptions<CreateAudioContextName<Kind>> })
 
-const createVirtualAudioContext = <Name extends AudioContextName>({
+const createVirtualAudioContext = <Kind extends CreateAudioContextKind>({
   id,
-  name,
+  kind,
   options,
-}: CreateVirtualAudioContextOptions<Name>): VirtualAudioContext<Name> => ({
+}: CreateVirtualAudioContextOptions<Kind>): VirtualAudioContext<Kind> => ({
   id: id || nanoid(),
-  name,
+  kind,
   options: options || ({} as any),
 })
 
 export type VirtualAudioContextOptionsUpdate<
-  Name extends AudioContextName = AudioContextName
-> = DeeplyPartial<DefinedAudioContextClassOptions<Name>>
+  Kind extends CreateAudioContextKind = CreateAudioContextKind
+> = DeeplyPartial<DefinedAudioContextClassOptions<CreateAudioContextName<Kind>>>
 
 /** @todo make respective virtual audio node util similar, possibly move to native web audio module */
 const updateAudioContextOptions = <
-  Name extends AudioContextName = AudioContextName
+  Kind extends CreateAudioContextKind = CreateAudioContextKind
 >(
-  prevOptions: DefinedAudioContextClassOptions<Name>,
+  prevOptions: DefinedAudioContextClassOptions<CreateAudioContextName<Kind>>,
   updatedOptions: VirtualAudioContextOptionsUpdate
-): DefinedAudioContextClassOptions<Name> =>
+): DefinedAudioContextClassOptions<CreateAudioContextName<Kind>> =>
   mergeWith({}, prevOptions, updatedOptions, (_obj, srcValue) => {
     if (Array.isArray(srcValue)) return srcValue
   })
 
-const updateVirtualAudioContextName = <
-  NewName extends AudioContextName = AudioContextName
+const updateVirtualAudioContextKind = <
+  NewKind extends CreateAudioContextKind = CreateAudioContextKind
 >(
   context: VirtualAudioContext,
-  name: NewName,
-  options?: AudioContextClassOptions<NewName>
-): VirtualAudioContext<NewName> => {
-  if (name === context.name) {
+  kind: NewKind,
+  options?: AudioContextClassOptions<CreateAudioContextName<NewKind>>
+): VirtualAudioContext<NewKind> => {
+  if (kind === context.kind) {
     return {
       ...context,
       options: options || context.options,
-    } as VirtualAudioContext<NewName>
+    } as VirtualAudioContext<NewKind>
   }
   return {
     id: context.id,
-    name: name,
+    kind,
     options: options || ({} as any),
   }
 }
 
 export const virtualAudioContextUtil = {
   create: createVirtualAudioContext,
-  updateName: updateVirtualAudioContextName,
+  updateName: updateVirtualAudioContextKind,
   updateOptions: updateAudioContextOptions,
 }
