@@ -2,18 +2,50 @@ import { getAudioContextConfig } from "./audioContextConfig"
 import {
   AudioContextClassOptions,
   AudioContextInstance,
-  AudioContextName,
 } from "./audioContextTypes"
 
-export const createAudioContext = <Name extends AudioContextName>(
-  context: Name,
-  ...[options]: AudioContextClassOptions<Name> extends undefined
+interface CreateAudioContextKindMap {
+  main: "normal"
+  normal: "normal"
+  offline: "offline"
+}
+
+let MAIN_CONTEXT: AudioContext
+const resolveMainContext = () => {
+  if (!MAIN_CONTEXT) {
+    MAIN_CONTEXT = new AudioContext()
+  }
+  return MAIN_CONTEXT
+}
+
+export type CreateAudioContextKind = keyof CreateAudioContextKindMap
+
+export type CreateAudioContextName<K extends CreateAudioContextKind> =
+  CreateAudioContextKindMap[K]
+
+/**
+ * Create an audio context from its name 'normal' (`AudioContext`) or 'offline' (`OfflineAudioContext`),
+ * or use 'main'.
+ *
+ * When "main" is selected, a singleton AudioContext is returned,
+ * which is not instantiated until the call with 'main'.
+ *
+ * @todo Custom extensions of BaseAudioContext should be supported.
+ */
+export const createAudioContext = <Kind extends CreateAudioContextKind>(
+  contextKind: Kind,
+  ...[options]: AudioContextClassOptions<
+    CreateAudioContextName<Kind>
+  > extends undefined
     ? [never]
-    : [AudioContextClassOptions<Name>]
-): AudioContextInstance<Name> => {
-  const config = getAudioContextConfig(context)
+    : [AudioContextClassOptions<CreateAudioContextName<Kind>>]
+): AudioContextInstance<CreateAudioContextName<Kind>> => {
+  if (contextKind === "main") {
+    return resolveMainContext() as any
+  }
+  const config = getAudioContextConfig(contextKind)
   if (!config) {
-    throw new Error(`Unsupported AudioContext '${context}'`)
+    throw new Error(`Unsupported AudioContext '${contextKind}'`)
   }
   return new config.cls(options as any) as any
 }

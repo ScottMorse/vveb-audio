@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger"
-import { AudioContextName } from "@/nativeWebAudio"
+import { AudioContextName, CreateAudioContextKind } from "@/nativeWebAudio"
 import { AudioContextRenderer } from "./audioContextRenderer"
 import {
   DefinedAudioContextClassOptions,
@@ -9,14 +9,14 @@ import {
 } from "./virtualAudioContext"
 
 export class VirtualAudioGraphContext<
-  Name extends AudioContextName = AudioContextName
+  Kind extends CreateAudioContextKind = CreateAudioContextKind
 > {
   get id() {
     return this._id
   }
 
-  get name() {
-    return this._name
+  get kind() {
+    return this._kind
   }
 
   get options() {
@@ -39,13 +39,14 @@ export class VirtualAudioGraphContext<
     return this.renderer.render()
   }
 
-  updateOptions(options: VirtualAudioContextOptionsUpdate<Name>) {
+  updateOptions(options: VirtualAudioContextOptionsUpdate<Kind>) {
     const updatedOptions = virtualAudioContextUtil.updateOptions(
       this._options,
       options
     )
-    this._options = updatedOptions
-    this.virtualContext.options = updatedOptions
+    /** @todo dig into why typing got so awkward for these */
+    this._options = updatedOptions as any
+    this.virtualContext.options = updatedOptions as any
     return this
   }
 
@@ -59,7 +60,7 @@ export class VirtualAudioGraphContext<
       options
     )
     Object.assign(this.virtualContext, updatedContext)
-    this._name = updatedContext.name as any
+    this._kind = updatedContext.kind as any
     this._options = updatedContext.options as any
     return this
   }
@@ -68,17 +69,17 @@ export class VirtualAudioGraphContext<
     logger.warnNotImplemented()
   }
 
-  constructor(private virtualContext: VirtualAudioContext<Name>) {
+  constructor(private virtualContext: VirtualAudioContext<Kind>) {
     this.virtualContext = virtualContext
     this._id = virtualContext.id
-    this._name = virtualContext.name
-    this._options = virtualContext.options || ({} as any)
+    this._kind = virtualContext.kind
+    this._options = (virtualContext.options as any) || ({} as any)
     this.renderer = new AudioContextRenderer(this)
   }
 
   private _id: string
-  private _name: Name
-  private _options: DefinedAudioContextClassOptions<Name>
+  private _kind: Kind
+  private _options: DefinedAudioContextClassOptions<Kind>
 
   private renderer: AudioContextRenderer
 

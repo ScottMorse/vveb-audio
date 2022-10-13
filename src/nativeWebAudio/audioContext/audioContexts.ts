@@ -1,5 +1,5 @@
 export const ALL_AUDIO_CONTEXTS = {
-  default: {
+  normal: {
     cls: AudioContext,
   },
   offline: {

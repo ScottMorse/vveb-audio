@@ -167,7 +167,7 @@ export const createVirtualAudioGraph = ({
 }: CreateVirtualAudioGraphOptions) =>
   new VirtualAudioGraph(
     Array.isArray(root) ? root : [root],
-    context || { name: "default" },
+    context || { kind: "main" },
     id,
     autoRender
   )
