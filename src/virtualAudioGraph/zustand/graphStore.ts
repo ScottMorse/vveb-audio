@@ -1,16 +1,14 @@
 import { nanoid } from "nanoid"
+import { immer } from "zustand/middleware/immer"
 import create from "zustand/vanilla"
+import { logger } from "@/lib/logger"
+import { AnyFunction } from "@/lib/util/types"
 import { AudioNodeKind, AudioNodeName } from "@/nativeWebAudio"
 import {
   CreateVirtualAudioContextOptions,
   VirtualAudioContext,
   virtualAudioContextUtil,
 } from "../context"
-import {
-  createVirtualAudioGraph,
-  CreateVirtualAudioGraphOptions,
-  VirtualAudioGraph,
-} from "../graph"
 import {
   CreateRootOptions,
   IsVirtualAudioNodeOptions,
@@ -25,8 +23,13 @@ interface VirtualGraphStore {
     roots: VirtualAudioNode[]
     context: VirtualAudioContext
   }
-  _lookupMap: Record<string, VirtualAudioNode>
 }
+
+interface InternalStore extends VirtualGraphStore {
+  lookupMap: { [nodeId: string]: VirtualAudioNode }
+}
+
+type StoreSelector<T = any> = (state: InternalStore) => T
 
 export interface CreateGraphStoreOptions {
   autoRender?: boolean
@@ -36,21 +39,17 @@ export interface CreateGraphStoreOptions {
 }
 
 export const createGraphStore = (options: CreateGraphStoreOptions) => {
-  const lookupMap: { [nodeId: string]: VirtualAudioNode } = {}
+  const lookupMap: InternalStore["lookupMap"] = {}
 
   const createNode = <IsRoot extends boolean = true>(
     nodeOrOptions: IsRoot extends true ? CreateRootOptions : VirtualAudioNode,
     isRoot: IsRoot = true as IsRoot
   ) => {
-    let node: VirtualAudioNode
-    if (isRoot) {
-      node = virtualAudioNodeUtil.createRoot(nodeOrOptions)
-      lookupMap[node.id] = node
-      node.inputs.map((input) => createNode(input.node, false))
-    } else {
-      node = nodeOrOptions as VirtualAudioNode
-      lookupMap[node.id] = node
-    }
+    const node = isRoot
+      ? virtualAudioNodeUtil.createRoot(nodeOrOptions)
+      : (nodeOrOptions as VirtualAudioNode)
+    node.inputs.map((input) => createNode(input.node, false))
+    lookupMap[node.id] = node
     return node
   }
 
@@ -58,8 +57,8 @@ export const createGraphStore = (options: CreateGraphStoreOptions) => {
     Array.isArray(options.root) ? options.root : [options.root]
   ).map((root) => createNode(root))
 
-  const { getState, setState, subscribe, destroy } = create<VirtualGraphStore>(
-    (set) => ({
+  const { getState, setState, subscribe, destroy } = create<InternalStore>(
+    immer<InternalStore>((set) => ({
       graph: {
         id: options.id || nanoid(),
         roots,
@@ -67,27 +66,52 @@ export const createGraphStore = (options: CreateGraphStoreOptions) => {
           options.context || { kind: "main" }
         ),
       },
-      _lookupMap: lookupMap,
-    })
+      lookupMap,
+    }))
   )
 
-  const getGraph = () => getState().graph
+  const selectGraph = (state: VirtualGraphStore) => state.graph
 
-  const getNodes = <
-    Name extends AudioNodeName = AudioNodeName,
-    Kind extends AudioNodeKind = AudioNodeKind
-  >(
-    filter?: IsVirtualAudioNodeOptions<Name, Kind>
-  ): NarrowedVirtualAudioGraphNode<Name, Kind>[] => {
-    const nodes = Object.values(getState()._lookupMap)
-    return filter
-      ? nodes.filter((node) => virtualAudioNodeUtil.isNode(node, filter))
-      : (nodes as any)
-  }
+  const selectNodes =
+    (state: InternalStore) =>
+    <
+      Name extends AudioNodeName = AudioNodeName,
+      Kind extends AudioNodeKind = AudioNodeKind
+    >(
+      filter?: IsVirtualAudioNodeOptions<Name, Kind>
+    ): NarrowedVirtualAudioGraphNode<Name, Kind>[] => {
+      const nodes = Object.values(state.lookupMap)
+      return filter
+        ? nodes.filter((node) => virtualAudioNodeUtil.isNode(node, filter))
+        : (nodes as any)
+    }
+
+  const selectNode =
+    (state: InternalStore) =>
+    (id: string, warn = false) => {
+      const node = state.lookupMap[id]
+      if (warn && !node) {
+        logger.warn(`Node ID '${id}' in graph '${state.graph.id}' not found`)
+      }
+      return node || null
+    }
+
+  const createGetter =
+    <F extends StoreSelector>(func: F) =>
+    (): ReturnType<F> =>
+      func(getState())
+
+  const forwardState =
+    <F extends StoreSelector<AnyFunction>>(
+      func: F
+    ): ((...args: Parameters<ReturnType<F>>) => ReturnType<ReturnType<F>>) =>
+    (...args) =>
+      func(getState())(...args)
 
   return {
-    getGraph,
-    getNodes,
+    getGraph: createGetter(selectGraph),
+    getNodes: forwardState(selectNodes),
+    getNode: forwardState(selectNode),
     destroy,
     subscribe,
   }
