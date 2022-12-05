@@ -57,7 +57,7 @@ export const createGraphStore = (options: CreateGraphStoreOptions) => {
     Array.isArray(options.root) ? options.root : [options.root]
   ).map((root) => createNode(root))
 
-  const { getState, setState, subscribe, destroy } = create<InternalStore>(
+  const { getState, setState, subscribe, destroy } = create<InternalStore>()(
     immer<InternalStore>((set) => ({
       graph: {
         id: options.id || nanoid(),
