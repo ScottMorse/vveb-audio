@@ -1,6 +1,6 @@
 import { AUDIO_NODE_KEYS } from "../node"
 
-/** @todo AudioWorklet, AudioWorkletProcessor AudioListener, AudioBuffer, and more? */
+/** @todo AudioWorkletProcessor AudioListener, AudioBuffer, and more? */
 
 export abstract class BaseAudioContext {
   constructor() {
