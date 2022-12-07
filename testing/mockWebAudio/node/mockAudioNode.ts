@@ -7,12 +7,13 @@ export class AudioNode {
     }
   }
 
-  public numberOfInputs = 1
-  public numberOfOutputs = 1
-  public channelCount = 1
-  public channelCountMode = "max"
-  public channelInterpretation = "speakers"
+  /** @todo review defaults and set/get usage */
+  numberOfInputs = 1
+  numberOfOutputs = 1
+  channelCount = 1
+  channelCountMode = "max"
+  channelInterpretation = "speakers"
 
-  public connect() {}
-  public disconnect() {}
+  connect() {}
+  disconnect() {}
 }
