@@ -7,6 +7,7 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
   rootDir: "../../",
+  testEnvironment: "jsdom",
 }
 
 export default config

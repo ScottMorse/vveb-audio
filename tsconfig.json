@@ -9,7 +9,7 @@
     "downlevelIteration": true,
     "strictNullChecks": true,
     "strict": true,
-    "types": ["jest"],
+    "types": ["jest", "audioworklet"],
     "noImplicitAny": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
@@ -17,10 +17,10 @@
     "noFallthroughCasesInSwitch": true,
     "experimentalDecorators": true,
     "target": "ES6",
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

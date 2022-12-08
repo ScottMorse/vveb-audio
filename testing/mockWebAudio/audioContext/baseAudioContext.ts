@@ -1,6 +1,4 @@
-import { AUDIO_NODE_KEYS } from "../node"
-
-/** @todo AudioWorkletProcessor AudioListener, AudioBuffer, and more? */
+import { AUDIO_NODE_KEYS } from "../audioNode"
 
 export abstract class BaseAudioContext {
   constructor() {
@@ -20,6 +18,7 @@ export abstract class BaseAudioContext {
   sampleRate = 44100
 }
 
+/** Dynamically add the AudioNode constructor methods such as createGain */
 for (const key of AUDIO_NODE_KEYS) {
   BaseAudioContext.prototype[`create${key.replace(/Node$/g, "")}`] = function (
     options?: any
@@ -27,7 +26,3 @@ for (const key of AUDIO_NODE_KEYS) {
     return new window[key](this, options)
   }
 }
-
-export class AudioContext extends BaseAudioContext {}
-
-export class OfflineAudioContext extends BaseAudioContext {}

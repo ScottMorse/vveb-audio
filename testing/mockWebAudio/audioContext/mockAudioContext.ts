@@ -1,9 +1,7 @@
 import { setGlobalProperty } from "../../util/globals"
-import {
-  AudioContext,
-  BaseAudioContext,
-  OfflineAudioContext,
-} from "./mockAudioContext"
+import { AudioContext } from "./audioContext"
+import { BaseAudioContext } from "./baseAudioContext"
+import { OfflineAudioContext } from "./offlineAudioContext"
 
 export const mockWindowAudioContext = () => {
   setGlobalProperty("AudioContext", AudioContext)

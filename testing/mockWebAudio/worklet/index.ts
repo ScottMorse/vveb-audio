@@ -1,1 +1,4 @@
-export * from "./mockWorklet"
+export * from "./worklet"
+export * from "./audioWorklet"
+export * from "./mockWorklets"
+export * from "./audioWorkletProcessor"

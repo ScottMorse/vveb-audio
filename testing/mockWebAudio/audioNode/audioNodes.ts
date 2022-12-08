@@ -1,5 +1,5 @@
 import { setGlobalProperty } from "../../util/globals"
-import { AudioNode } from "./mockAudioNode"
+import { AudioNode } from "./audioNode"
 
 export const AUDIO_NODE_KEYS = [
   "AnalyserNode",
@@ -25,11 +25,3 @@ export const AUDIO_NODE_KEYS = [
   "StereoPannerNode",
   "WaveShaperNode",
 ]
-
-export const mockWindowAudioNodes = () => {
-  setGlobalProperty("AudioNode", AudioNode)
-
-  for (const node of AUDIO_NODE_KEYS) {
-    setGlobalProperty(node, class extends AudioNode {})
-  }
-}

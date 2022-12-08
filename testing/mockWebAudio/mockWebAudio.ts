@@ -1,9 +1,9 @@
-import { mockWindowAudioContext } from "./context"
-import { mockWindowAudioNodes } from "./node"
-import { mockWorklet } from "./worklet"
+import { mockWindowAudioContext } from "./audioContext"
+import { mockWindowAudioNodes } from "./audioNode"
+import { mockWindowWorklets } from "./worklet"
 
 export const mockWebAudio = () => {
-  mockWorklet()
+  mockWindowWorklets()
   mockWindowAudioContext()
   mockWindowAudioNodes()
 }
