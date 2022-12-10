@@ -3,7 +3,7 @@
 export class AudioNode {
   constructor(public context: BaseAudioContext, options?: any) {
     for (const [key, value] of Object.entries(options)) {
-      this[key] = value
+      // this[key] = value /** @todo review */
     }
   }
 

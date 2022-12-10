@@ -2,7 +2,7 @@ import { MessagePort } from "./messagePort"
 
 export class AudioWorkletProcessor {
   process() {
-    return true
+    return false
   }
 
   port: MessagePort = new MessagePort()

@@ -20,9 +20,14 @@ export abstract class BaseAudioContext {
 
 /** Dynamically add the AudioNode constructor methods such as createGain */
 for (const key of AUDIO_NODE_KEYS) {
-  BaseAudioContext.prototype[`create${key.replace(/Node$/g, "")}`] = function (
-    options?: any
-  ) {
+  BaseAudioContext.prototype[
+    `create${key.replace(
+      /Node$/g,
+      ""
+    )}` as keyof typeof BaseAudioContext.prototype
+  ] = function (options?: any) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return new window[key](this, options)
-  }
+  } as any
 }

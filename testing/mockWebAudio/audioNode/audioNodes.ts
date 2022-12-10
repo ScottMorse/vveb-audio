@@ -1,6 +1,3 @@
-import { setGlobalProperty } from "../../util/globals"
-import { AudioNode } from "./audioNode"
-
 export const AUDIO_NODE_KEYS = [
   "AnalyserNode",
   "AudioBufferSourceNode",
@@ -24,4 +21,4 @@ export const AUDIO_NODE_KEYS = [
   "ScriptProcessorNode",
   "StereoPannerNode",
   "WaveShaperNode",
-]
+] as const
