@@ -1,0 +1,9 @@
+{
+  "name": "@vveb-audio/graph",
+  "description": "A virtual audio graph on top of the Web Audio API",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll=true"
+  }
+}

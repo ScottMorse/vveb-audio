@@ -1,0 +1,9 @@
+{
+  "name": "@vveb-audio/test-utils",
+  "description": "Mock the Web Audio API for testing, such as in Jest unit tests",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "jest --config=./jest.config.ts",
+    "test:watch": "jest --watchAll=true --config=./jest.config.ts"
+  }
+}

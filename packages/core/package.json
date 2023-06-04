@@ -1,0 +1,9 @@
+{
+  "name": "@vveb-audio/core",
+  "description": "The core VVeb Audio library",
+  "version": "0.1.0",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watchAll=true"
+  }
+}

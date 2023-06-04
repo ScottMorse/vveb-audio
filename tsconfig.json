@@ -1,26 +1,11 @@
 {
+  "extends": "./config/web/tsconfig.json",
   "compilerOptions": {
-    "resolveJsonModule": true,
-    "lib": ["ESNext", "DOM"],
-    "allowJs": true,
-    "moduleResolution": "node",
-    "module": "ESNext",
-    "esModuleInterop": true,
-    "downlevelIteration": true,
-    "strictNullChecks": true,
-    "strict": true,
-    "types": ["jest"],
-    "noImplicitAny": true,
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "experimentalDecorators": true,
-    "target": "ES6",
-    "baseUrl": "src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]
+      "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["userScripts/dev/devUserScript.ts"]
 }

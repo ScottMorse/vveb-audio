@@ -1,0 +1,11 @@
+{
+  "name": "test-utils-browser-comparison",
+  "private": true,
+  "scripts": {
+    "start": "webpack-dev-server"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

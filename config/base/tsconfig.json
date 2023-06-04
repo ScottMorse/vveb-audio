@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "lib": ["ESNext", "DOM"],
+    "allowJs": true,
+    "alwaysStrict": true,
+    "moduleResolution": "node",
+    "module": "ESNext",
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "strictNullChecks": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "target": "ES6",
+    "types": []
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "include": ["_/*"]
+}
