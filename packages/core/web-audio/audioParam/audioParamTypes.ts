@@ -3,7 +3,7 @@ import {
   AudioNodeKind,
   AudioNodeName,
   AudioNodeNameOfKind,
-} from "@@core/native/audioNode"
+} from "@@core/web-audio/audioNode"
 
 export type AudioParamName<Name extends AudioNodeName = AudioNodeName> = {
   [K in keyof AudioNodeInstance<Name>]: AudioNodeInstance<Name>[K] extends AudioParam
