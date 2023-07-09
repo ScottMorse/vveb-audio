@@ -1,4 +1,4 @@
-import { Mock } from "../lib/mock"
+import { Mock } from "../lib/engine"
 
 export interface RuntimeTestContext {
   ctx: AudioContext

@@ -1,4 +1,10 @@
 {
   "extends": "../../config/web/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@@core/*": ["../../node_modules/@vveb-audio/core/*"]
+    }
+  },
   "include": ["**/*.ts"]
 }

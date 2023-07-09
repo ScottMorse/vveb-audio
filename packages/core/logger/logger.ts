@@ -1,7 +1,7 @@
 import isEqual from "lodash/isEqual"
-import { IS_LOCALHOST } from "../internal/util/isLocalhost"
-import { ArrayItem } from "../internal/util/types"
-import { TypedEventEmitter } from "../internal/util/events"
+import { getIsLocalHost } from "@@core/internal/util/isLocalhost"
+import { ArrayItem } from "@@core/internal/util/types"
+import { TypedEventTarget } from "@@core/internal/util/events"
 
 const LOG_LEVELS = ["debug", "info", "warn", "error"] as const
 
@@ -21,12 +21,24 @@ export interface Log {
   metadata: LogMetadata
 }
 
-interface LoggerEvents {
-  log: Log & { contextName: string }
+export class LogEvent extends Event {
+  constructor(
+    public log: Log,
+    public logContextName: string,
+    eventInitDict?: EventInit
+  ) {
+    super("log", eventInitDict)
+  }
 }
-const LOG_EMITTER = new TypedEventEmitter<LoggerEvents>()
 
-const DEFAULT_PRINT_LEVEL = IS_LOCALHOST ? "warn" : "error"
+type LoggerEvents = {
+  log: LogEvent
+}
+
+const LOG_EMITTER = new TypedEventTarget<LoggerEvents>()
+
+const DEFAULT_PRINT_LEVEL =
+  process.env.NODE_ENV === "development" || getIsLocalHost() ? "warn" : "error"
 
 const getLogSequence = (level: LogLevel) => LOG_LEVELS.indexOf(level)
 
@@ -36,7 +48,7 @@ const validateLevel = <IsSetting extends boolean = false>(
 ): level is IsSetting extends true ? LogLevelSetting : LogLevel => {
   const isValid =
     (isSetting && level === SILENT) || getLogSequence(level as LogLevel) > -1
-  if (!isValid && IS_LOCALHOST) {
+  if (!isValid && getIsLocalHost()) {
     console.warn(new Error(`vveb-audio: Invalid log level '${level}'`))
   }
   return isValid
@@ -84,10 +96,15 @@ class _Logger {
   log(level: LogLevel, message: LogMessage, metadata?: LogMetadata) {
     try {
       if (validateLevel(level)) {
-        this._log({ level, message, metadata: metadata || {} })
+        this._log({ level, message, metadata: metadata ?? {} })
       }
     } catch (error) {
-      console.error("vveb-audio: Failed to log", error)
+      console.error("vveb-audio: Failed to log", {
+        error,
+        level,
+        message,
+        metadata,
+      })
     }
   }
 
@@ -104,7 +121,7 @@ class _Logger {
   }
 
   get contextName(): string {
-    return this._contextName || ""
+    return this._contextName ?? ""
   }
 
   set contextName(name: string | null) {
@@ -112,7 +129,7 @@ class _Logger {
   }
 
   constructor(options?: LoggerOptions) {
-    this._printLevel = options?.printLevel || "default"
+    this._printLevel = options?.printLevel ?? "default"
     this._contextName = options?.contextName
   }
 
@@ -121,7 +138,7 @@ class _Logger {
 
   private _log(log: Log) {
     this.printLog(log)
-    LOG_EMITTER.emit("log", { ...log, contextName: this.contextName })
+    LOG_EMITTER.dispatchEvent(new LogEvent(log, this.contextName))
   }
 
   private printLog(log: Log) {
@@ -178,8 +195,14 @@ export const logger = new _Logger()
 
 export const listenToVVebLogs = <Event extends keyof LoggerEvents>(
   event: Event,
-  listener: (...args: LoggerEvents[Event][]) => void,
-  remove?: boolean
+  listener: (event: LoggerEvents[Event]) => void
 ) => {
-  LOG_EMITTER[remove ? "off" : "on"](event, listener)
+  LOG_EMITTER.addEventListener(event, listener)
+}
+
+export const removeListenToVVebLogs = <Event extends keyof LoggerEvents>(
+  event: Event,
+  listener: (event: LoggerEvents[Event]) => void
+) => {
+  LOG_EMITTER.removeEventListener(event, listener)
 }

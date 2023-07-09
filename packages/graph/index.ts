@@ -1,1 +1,1 @@
-import {} from "@@core/logger"
+import {} from '@@core/logger'

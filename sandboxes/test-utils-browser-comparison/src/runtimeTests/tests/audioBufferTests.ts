@@ -1,5 +1,5 @@
 import { strict as assert } from "assert"
-import { Mock } from "../../lib/mock"
+import { Mock } from "../../lib/engine"
 import { compareErrors } from "../../lib/util"
 import { RuntimeTest } from "../runtimeTest"
 

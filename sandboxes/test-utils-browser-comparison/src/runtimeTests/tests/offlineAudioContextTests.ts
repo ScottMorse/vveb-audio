@@ -2,7 +2,7 @@ import { strict as assert } from "assert"
 import { delay } from "@@core/internal/testing/delay"
 import { getGlobalDeviceSetting } from "@@test-utils/internal/util/deviceSettings"
 import { appLogger } from "../../lib/logger"
-import { Mock } from "../../lib/mock"
+import { Mock } from "../../lib/engine"
 import { compareErrors } from "../../lib/util"
 import { RuntimeTest } from "../runtimeTest"
 
@@ -306,13 +306,13 @@ export const OFFLINE_AUDIO_CONTEXT_TESTS: RuntimeTest[] = [
           new OfflineAudioContext(
             -1,
             0,
-            getGlobalDeviceSetting("minSampleRate")
+            getEngineContext(this).deviceSettings.minSampleRate
           ),
         () =>
           new Mock.OfflineAudioContext(
             -1,
             0,
-            getGlobalDeviceSetting("minSampleRate")
+            getEngineContext(this).deviceSettings.minSampleRate
           ),
         "number of channels -1, length 0, sample rate getGlobalDeviceSetting('minSampleRate')"
       )

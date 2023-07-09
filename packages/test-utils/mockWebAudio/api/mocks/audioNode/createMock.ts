@@ -1,0 +1,47 @@
+import { MockAudioNode } from "./base/MockAudioNode"
+import {
+  MockAnalyserNode,
+  MockBiquadFilterNode,
+  MockAudioBufferSourceNode,
+  MockChannelMergerNode,
+  MockChannelSplitterNode,
+  MockConstantSourceNode,
+  MockConvolverNode,
+  MockDelayNode,
+  MockDynamicsCompressorNode,
+  MockGainNode,
+  MockIIRFilterNode,
+  MockMediaElementAudioSourceNode,
+  MockMediaStreamAudioDestinationNode,
+  MockMediaStreamAudioSourceNode,
+  MockOscillatorNode,
+  MockPannerNode,
+  MockStereoPannerNode,
+  MockWaveShaperNode,
+} from "./creatableSubclasses"
+import { MockAudioDestinationNode } from "./destination"
+import { MockAudioScheduledSourceNode } from "./scheduledSource"
+
+export const createAudioNodeMock = () => ({
+  AnalyserNode: MockAnalyserNode,
+  AudioBufferSourceNode: MockAudioBufferSourceNode,
+  AudioDestinationNode: MockAudioDestinationNode,
+  AudioNode: MockAudioNode,
+  AudioScheduledSourceNode: MockAudioScheduledSourceNode,
+  BiquadFilterNode: MockBiquadFilterNode,
+  ChannelMergerNode: MockChannelMergerNode,
+  ChannelSplitterNode: MockChannelSplitterNode,
+  ConstantSourceNode: MockConstantSourceNode,
+  ConvolverNode: MockConvolverNode,
+  DelayNode: MockDelayNode,
+  DynamicsCompressorNode: MockDynamicsCompressorNode,
+  GainNode: MockGainNode,
+  IIRFilterNode: MockIIRFilterNode,
+  MediaElementAudioSourceNode: MockMediaElementAudioSourceNode,
+  MediaStreamAudioDestinationNode: MockMediaStreamAudioDestinationNode,
+  MediaStreamAudioSourceNode: MockMediaStreamAudioSourceNode,
+  OscillatorNode: MockOscillatorNode,
+  PannerNode: MockPannerNode,
+  StereoPannerNode: MockStereoPannerNode,
+  WaveShaperNode: MockWaveShaperNode,
+})

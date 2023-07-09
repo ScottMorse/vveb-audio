@@ -1,6 +1,6 @@
 // https://stackoverflow.com/questions/49580725/is-it-possible-to-restrict-typescript-object-to-contain-only-properties-defined
 
-import { KeysOfType } from "./keys"
+import { KeyOfType } from "./keys"
 
 export type Impossible<K extends keyof any> = {
   [P in K]: never
@@ -11,7 +11,7 @@ export type NoExtraProperties<T, U extends T = T> = U &
 
 export type PickAny<T, K extends string | number | symbol> = Pick<
   T,
-  KeysOfType<T, K>
+  KeyOfType<T, K>
 >
 
 /** Does not change `T` but validates that its shape matches the AbstractMap type */

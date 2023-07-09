@@ -1,38 +1,36 @@
-/** A script loaded to the user's page that provides utilities to the console. */
-
-import { createLogger } from "@vveb-audio/core/logger"
-import { createAudioNode } from "@@core/native"
-import {
-  createAudioContext,
-  getCanAudioContextStartListener,
-} from "@@core/native/audioContext"
-import {
-  ALL_AUDIO_NODES,
-  CREATABLE_AUDIO_NODES,
-} from "@@core/native/audioNode/audioNodes"
-import { CreatableAudioNodeName } from "@@core/native/audioNode/createAudioNode"
-import { discoverDefaultAudioParams } from "@@core/native/audioParam"
+import { createLogger } from "@@core/logger"
+import { AudioContextInstance, createEngine, Engine } from "@@core/webAudio"
+import * as StandardizedAudioContext from "standardized-audio-context"
+;(window as any).sac = StandardizedAudioContext
 
 const logger = createLogger({
   contextName: "Dev User Script",
   printLevel: "debug",
 })
 
+/** Evaluates to an audio context's current time or can be called to get current time plus offset */
+type Time = number & ((offset: number) => number)
+
+const createTime = (context: AudioContextInstance) => {
+  const time = (offset: number) => context.currentTime + offset
+
+  return Object.assign(time, {
+    valueOf: () => context.currentTime,
+  }) as Time
+}
+
 interface VVUtils {
-  rawContext: AudioContext
-  rawOfflineContext: OfflineAudioContext
-  rawDestination: AudioDestinationNode
-  createNode(name: CreatableAudioNodeName, options: any): any
-  NODES: {
-    creatable: typeof CREATABLE_AUDIO_NODES
-    all: typeof ALL_AUDIO_NODES
+  ctx: AudioContextInstance<"live", "native">
+  engine: Engine<"native">
+  sac: typeof StandardizedAudioContext & {
+    ctx: AudioContextInstance<"live", "standardized">
+    engine: Engine<"standardized">
+    t: Time
   }
-  discoverDefaultAudioParams: typeof discoverDefaultAudioParams
   testNode: GainNode
   testParam: AudioParam
+  t: Time
   resetTestNode(): void
-  t: number
-  time(offset: number): void
 }
 
 declare global {
@@ -41,79 +39,76 @@ declare global {
 }
 
 const run = () => {
-  logger.info("Initialized")
+  logger.info("Script Initialized")
 
-  const listener = getCanAudioContextStartListener()
+  const engine = createEngine()
+  const sacEngine = createEngine({ api: "standardized" })
 
-  const setGlobalContext = () => {
-    const rawContext = createAudioContext("main")
-    window.vv = new (class VV implements VVUtils {
-      discoverDefaultAudioParams = discoverDefaultAudioParams
+  let isInitialized = false
+  const initialize = () => {
+    logger.info(isInitialized ? "Utils updated" : "Utils initialized")
 
-      NODES = {
-        creatable: CREATABLE_AUDIO_NODES,
-        all: ALL_AUDIO_NODES,
-      }
+    isInitialized = true
 
-      rawContext = rawContext
+    const ctx = engine.createContext()
 
-      rawDestination = rawContext.destination
+    const createTestNode = () => {
+      window.vv?.testNode?.disconnect()
+      const node = engine.createAudioNode("gain", ctx)
+      node.connect(ctx.destination)
+      return node
+    }
 
-      rawOfflineContext = new OfflineAudioContext(2, 48_000, 48_000)
+    const testNode = createTestNode()
 
-      testNode = this.createNode("gain", { autoConnect: true })
+    const sacCtx = sacEngine.createContext()
 
-      testParam = this.testNode.gain
+    window.vv = {
+      ctx,
+      engine,
+      sac: {
+        ...StandardizedAudioContext,
+        ctx: sacCtx,
+        engine: sacEngine,
+        t: createTime(sacCtx),
+      } as any,
+      testNode,
+      testParam: testNode.gain,
+      t: createTime(ctx),
+      resetTestNode: () => {
+        window.vv.testNode = createTestNode()
+      },
+    }
 
-      constructor() {
-        let prevTestParamValue = this.testParam.value
-        setInterval(() => {
-          if (prevTestParamValue !== this.testParam.value) {
-            logger.debug(`Test Param: ${this.testParam.value}`)
-            prevTestParamValue = this.testParam.value
-          }
-        }, 250)
-      }
+    ctx.onstatechange = () => {
+      ctx.state === "closed" && initialize()
+    }
+    sacCtx.onstatechange = () => {
+      sacCtx.state === "closed" && initialize()
+    }
 
-      createNode<T extends CreatableAudioNodeName>(name: T, options: any) {
-        const { autoConnect = true, ...nodeOptions } = options || {}
-        const node = createAudioNode(
-          name,
-          rawContext,
-          ...([nodeOptions] as any)
-        )
-        if (autoConnect) {
-          node.connect(rawContext.destination)
+    const runTestNodeWatcher = () => {
+      let prevTestParamValue = vv.testParam.value
+      setInterval(() => {
+        if (prevTestParamValue !== vv.testParam.value) {
+          logger.debug(`Test Param: ${vv.testParam.value}`)
+          prevTestParamValue = vv.testParam.value
         }
-        return node
-      }
+      }, 250)
+    }
 
-      resetTestNode() {
-        this.testNode.disconnect()
-        this.testNode = this.createNode("gain", { autoConnect: true })
-        this.testParam = this.testNode.gain
-      }
-
-      get t() {
-        return rawContext.currentTime
-      }
-
-      time(offset: number) {
-        return rawContext.currentTime + offset
-      }
-    })()
-
-    logger.info(
-      "Main context created and utilities initialized at window.vv",
-      window.vv
-    )
+    runTestNodeWatcher()
   }
 
-  if (listener.canStart) {
-    setGlobalContext()
-  } else {
-    listener.on("canStart", setGlobalContext)
-  }
+  engine.onCanStart(() => {
+    if(isInitialized) return
+    logger.info("Contexts can start")
+    initialize()
+  })
 }
 
-run()
+try {
+  run()
+} catch (e) {
+  logger.error(e as Error)
+}

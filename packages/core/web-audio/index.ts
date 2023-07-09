@@ -1,1 +1,0 @@
-export { WAPI } from "./api"

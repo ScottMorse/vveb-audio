@@ -1,15 +1,15 @@
 import { createContext, ReactNode, useContext, useState } from "react"
-import { Mock } from "./mock"
+import { MOCK_ENGINE } from "./engine"
 
 interface ContextState {
   audioContext: AudioContext | null
   setAudioContext: (audioContext: AudioContext) => void
-  mockAudioContext: Mock.AudioContext | null
-  setMockAudioContext: (mockAudioContext: Mock.AudioContext) => void
+  mockAudioContext: AudioContext | null
+  setMockAudioContext: (mockAudioContext: AudioContext) => void
   offlineContext: OfflineAudioContext
   setOfflineContext: (offlineContext: OfflineAudioContext) => void
-  mockOfflineContext: Mock.OfflineAudioContext
-  setMockOfflineContext: (mockOfflineContext: Mock.OfflineAudioContext) => void
+  mockOfflineContext: OfflineAudioContext
+  setMockOfflineContext: (mockOfflineContext: OfflineAudioContext) => void
 }
 
 const appContext = createContext(undefined as unknown as ContextState)

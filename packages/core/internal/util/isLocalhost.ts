@@ -1,7 +1,7 @@
-import { IS_BROWSER } from "./isBrowser"
+import { getIsBrowser } from "./isBrowser"
 
-export const IS_LOCALHOST =
-  IS_BROWSER &&
+export const getIsLocalHost = () =>
+  getIsBrowser() &&
   (window.location.hostname === "localhost" ||
     // [::1] is the IPv6 localhost address.
     window.location.hostname === "[::1]" ||

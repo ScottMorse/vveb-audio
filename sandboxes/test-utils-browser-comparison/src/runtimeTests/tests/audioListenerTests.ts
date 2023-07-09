@@ -1,6 +1,6 @@
 import { strict as assert } from "assert"
 import { delay } from "@@core/internal/testing/delay"
-import { Mock } from "../../lib/mock"
+import { Mock } from "../../lib/engine"
 import { compareErrors } from "../../lib/util"
 import { RuntimeTest } from "../runtimeTest"
 

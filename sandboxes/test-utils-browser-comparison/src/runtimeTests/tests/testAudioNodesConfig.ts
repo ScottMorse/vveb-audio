@@ -1,27 +1,27 @@
 import {
   AudioNodeContextMethod,
-  AudioNodeClassOptions,
+  AudioNodeOptions,
   AudioNodeClass,
 } from "@@core/native/audioNode"
-import { CreatableAudioNodeName } from "@@core/native/audioNode/createAudioNode"
+import { AudioNodeName } from "@@core/native/audioNode/createAudioNode"
 
 type AudioNodeNameWithContextMethod = {
-  [Name in CreatableAudioNodeName]: AudioNodeContextMethod<Name> extends null
+  [Name in AudioNodeName]: AudioNodeContextMethod<Name> extends null
     ? never
     : Name
-}[CreatableAudioNodeName]
-
-const creatAudioMediaStream = () =>
+}[AudioNodeName]
+)
+const createAudioMediaStream = () =>
   new AudioContext().createMediaStreamDestination().stream
 
 export const createAudioNodesTestConfig = (): {
   [Name in AudioNodeNameWithContextMethod]?: {
     contextMethodArgs: Parameters<AudioContext[AudioNodeContextMethod<Name>]>
-    optionsArg: AudioNodeClassOptions<Name>
+    optionsArg: AudioNodeOptions<Name>
     comparisonProperties: (keyof InstanceType<AudioNodeClass<Name>>)[]
   }
 } => {
-  const stream = creatAudioMediaStream()
+  const stream = createAudioMediaStream()
   return {
     analyser: {
       contextMethodArgs: [],
@@ -38,7 +38,7 @@ export const createAudioNodesTestConfig = (): {
         "smoothingTimeConstant",
       ],
     },
-    audioBufferSource: {
+    bufferSource: {
       contextMethodArgs: [],
       optionsArg: {
         buffer: null,

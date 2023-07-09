@@ -49,6 +49,9 @@ const config: Configuration = {
     path: BUILD_DIR,
     clean: true,
   },
+  optimization: {
+    minimize: false,
+  },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx"],
     plugins: [

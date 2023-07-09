@@ -3,8 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@@core/*": ["../../node_modules/@vveb-audio/core/*"],
-      "@@test-utils/*": ["../../node_modules/@vveb-audio/test-utils/*"]
+      "@@core/*": ["../../packages/core/*"],
+      "@@test-utils/*": ["../../packages/test-utils/*"]
     }
   },
   "include": ["**/*.ts"]

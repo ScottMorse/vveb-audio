@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react"
 import { useAppContext } from "../lib/appContext"
-import { Mock } from "../lib/mock"
+import { Mock } from "../lib/engine"
 import { RunTestGroup } from "./RunTestGroup"
 import { RuntimeTestFunction } from "./runtimeTest"
 import { TESTS } from "./tests"
