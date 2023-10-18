@@ -1,16 +1,30 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockDelayNodeInternals } from "./MockDelayNodeInternals"
 
-export class MockDelayNode
-  extends MockAudioNode<MockDelayNodeInternals>
-  implements DelayNode
-{
-  constructor(context: BaseAudioContext, maxDelayTime?: number) {
-    super(context, {maxDelayTime}, new MockDelayNodeInternals(context, maxDelayTime))
+export const createDelayNodeMock = createMockFactory<
+  typeof DelayNode,
+  MockDelayNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("DelayNode")
+  class MockDelayNode
+    extends mockEnvironment.api.AudioNode
+    implements DelayNode
+  {
+    constructor(context: BaseAudioContext, options?: DelayOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockDelayNodeInternals(this, mockEnvironment, context, options)
+      )
+    }
+
+    get delayTime(): AudioParam {
+      return getInternals(this).delayTime
+    }
   }
 
-  get delayTime() {
-    return getInternals(this).delayTime
-  }
-}
+  return MockDelayNode
+})

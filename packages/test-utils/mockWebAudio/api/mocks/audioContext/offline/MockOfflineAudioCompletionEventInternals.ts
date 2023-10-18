@@ -1,20 +1,20 @@
-import { MockInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { Mixin } from "ts-mixer"
+import {
+  MockEnvironment,
+  MockInternals,
+} from "@@test-utils/mockWebAudio/api/mockFactory"
 
-export class MockOfflineAudioCompletionEventInternals extends Mixin(
-  Event,
-  MockInternals<OfflineAudioCompletionEvent>
-) {
+export class MockOfflineAudioCompletionEventInternals
+  extends MockInternals<OfflineAudioCompletionEvent>
+  implements Omit<OfflineAudioCompletionEvent, keyof Event>
+{
   constructor(
-    type: string,
-    options: { renderedBuffer: AudioBuffer },
+    mock: OfflineAudioCompletionEvent,
+    mockEnvironment: MockEnvironment,
+    options: OfflineAudioCompletionEventInit,
     private _offlineCtx: OfflineAudioContext
   ) {
-    super(type, {
-      bubbles: true,
-      cancelable: false,
-      composed: false,
-    })
+    super(mock, mockEnvironment)
+
     this._renderedBuffer = options.renderedBuffer
   }
 
@@ -26,17 +26,9 @@ export class MockOfflineAudioCompletionEventInternals extends Mixin(
     return this._renderedBuffer
   }
 
-  set renderedBuffer(value: AudioBuffer) {
-    this._renderedBuffer = value
-  }
-
-  get srcElement() {
-    return this._offlineCtx
-  }
-
   get target() {
     return this._offlineCtx
   }
 
-  private _renderedBuffer: AudioBuffer
+  protected _renderedBuffer: AudioBuffer
 }

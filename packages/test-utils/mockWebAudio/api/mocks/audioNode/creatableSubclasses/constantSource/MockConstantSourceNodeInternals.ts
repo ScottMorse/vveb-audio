@@ -1,20 +1,28 @@
+import { MockEnvironment } from "@@test-utils/mockWebAudio/api/mockFactory"
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
 import { MockAudioScheduledSourceNodeInternals } from "../../scheduledSource/MockAudioScheduledSourceNodeInternals"
 
 export class MockConstantSourceNodeInternals
   extends MockAudioScheduledSourceNodeInternals
-  implements ConstantSourceNode
+  implements OmitEventTarget<ConstantSourceNode>
 {
-  constructor(context: BaseAudioContext, options?: ConstantSourceOptions) {
-    super(context)
+  constructor(
+    mock: ConstantSourceNode,
+    mockEnvironment: MockEnvironment,
+    context: BaseAudioContext,
+    options?: ConstantSourceOptions
+  ) {
+    super(mock, mockEnvironment, context)
+
     if (options?.offset !== undefined) {
       this._offset = createMockAudioParam(
-        getEngineContext(this),
+        this.mockEnvironment.api,
         this.context,
         {
           value: options.offset,
           defaultValue: 1,
+          name: "ConstantSource.offset",
         }
       )
     }
@@ -33,12 +41,15 @@ export class MockConstantSourceNodeInternals
   }
 
   protected _offset = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 1,
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "ConstantSource.offset",
     }
   )
 

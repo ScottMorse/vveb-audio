@@ -1,8 +1,10 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { createMockMediaStreamTrack } from "../../../mediaStream/track"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockMediaStreamAudioDestinationNodeInternals
   extends MockAudioNodeInternals
-  implements MediaStreamAudioDestinationNode
+  implements OmitEventTarget<MediaStreamAudioDestinationNode>
 {
   get numberOfOutputs() {
     return 0
@@ -12,7 +14,12 @@ export class MockMediaStreamAudioDestinationNodeInternals
     return this._stream
   }
 
-  protected _stream = new MediaStream()
+  protected _stream = new this.mockEnvironment.api.MediaStream([
+    createMockMediaStreamTrack(this.mockEnvironment.api, {
+      kind: "audio",
+      label: "MediaStreamAudioDestinationNode",
+    }),
+  ])
 
   protected _channelCountMode = "explicit" as const
 

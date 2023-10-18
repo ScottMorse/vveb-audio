@@ -1,48 +1,61 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockAnalyserNodeInternals } from "./MockAnalyserNodeInternals"
 
-export class MockAnalyserNode
-  extends MockAudioNode<MockAnalyserNodeInternals>
-  implements AnalyserNode
-{
-  constructor(context: BaseAudioContext, options?: AnalyserOptions) {
-    super(context, options, new MockAnalyserNodeInternals(context, options))
-  }
+export const createAnalyserNodeMock = createMockFactory<
+  typeof AnalyserNode,
+  MockAnalyserNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("AnalyserNode")
+  class MockAnalyserNode
+    extends mockEnvironment.api.AudioNode
+    implements AnalyserNode
+  {
+    constructor(context: BaseAudioContext, options?: AnalyserOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockAnalyserNodeInternals(this, mockEnvironment, context)
+      )
+    }
 
-  get fftSize() {
-    return getInternals(this).fftSize
-  }
+    get fftSize(): number {
+      return getInternals(this).fftSize
+    }
 
-  get frequencyBinCount() {
-    return getInternals(this).frequencyBinCount
-  }
+    get frequencyBinCount(): number {
+      return getInternals(this).frequencyBinCount
+    }
 
-  getByteFrequencyData(_array: Uint8Array) {
-    return getInternals(this).getByteFrequencyData(_array)
-  }
+    getByteFrequencyData(_array: Uint8Array) {
+      return getInternals(this).getByteFrequencyData(_array)
+    }
 
-  getByteTimeDomainData(_array: Uint8Array) {
-    return getInternals(this).getByteTimeDomainData(_array)
-  }
+    getByteTimeDomainData(_array: Uint8Array) {
+      return getInternals(this).getByteTimeDomainData(_array)
+    }
 
-  getFloatFrequencyData(_array: Float32Array) {
-    return getInternals(this).getFloatFrequencyData(_array)
-  }
+    getFloatFrequencyData(_array: Float32Array) {
+      return getInternals(this).getFloatFrequencyData(_array)
+    }
 
-  getFloatTimeDomainData(_array: Float32Array) {
-    return getInternals(this).getFloatTimeDomainData(_array)
-  }
+    getFloatTimeDomainData(_array: Float32Array) {
+      return getInternals(this).getFloatTimeDomainData(_array)
+    }
 
-  get maxDecibels() {
-    return getInternals(this).maxDecibels
-  }
+    get maxDecibels(): number {
+      return getInternals(this).maxDecibels
+    }
 
-  get minDecibels() {
-    return getInternals(this).minDecibels
-  }
+    get minDecibels(): number {
+      return getInternals(this).minDecibels
+    }
 
-  get smoothingTimeConstant() {
-    return getInternals(this).smoothingTimeConstant
+    get smoothingTimeConstant(): number {
+      return getInternals(this).smoothingTimeConstant
+    }
   }
-}
+  return MockAnalyserNode
+})

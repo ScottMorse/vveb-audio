@@ -1,20 +1,23 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockStereoPannerNodeInternals
   extends MockAudioNodeInternals
-  implements StereoPannerNode
+  implements OmitEventTarget<StereoPannerNode>
 {
   get pan() {
     return this._pan
   }
 
   protected _pan = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -1,
+      name: "StereoPanner.pan",
     }
   )
 

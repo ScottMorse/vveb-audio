@@ -1,8 +1,9 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockConvolverNodeInternals
   extends MockAudioNodeInternals
-  implements ConvolverNode
+  implements OmitEventTarget<ConvolverNode>
 {
   get buffer() {
     return this._buffer

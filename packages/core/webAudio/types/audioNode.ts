@@ -7,102 +7,102 @@ import {
 /** Metadata about every AudioNode subclass */
 export const AUDIO_NODES = {
   analyser: {
-    constructor: "AnalyserNode",
+    constructorName: "AnalyserNode",
     contextMethod: "createAnalyser",
     kind: ["effect", "destination"],
   },
   bufferSource: {
-    constructor: "AudioBufferSourceNode",
+    constructorName: "AudioBufferSourceNode",
     contextMethod: "createBufferSource",
     kind: ["source"],
   },
   biquadFilter: {
-    constructor: "BiquadFilterNode",
+    constructorName: "BiquadFilterNode",
     contextMethod: "createBiquadFilter",
     kind: ["effect"],
   },
   channelMerger: {
-    constructor: "ChannelMergerNode",
+    constructorName: "ChannelMergerNode",
     contextMethod: "createChannelMerger",
     kind: ["effect"],
   },
   channelSplitter: {
-    constructor: "ChannelSplitterNode",
+    constructorName: "ChannelSplitterNode",
     contextMethod: "createChannelSplitter",
     kind: ["effect"],
   },
   constantSource: {
-    constructor: "ConstantSourceNode",
+    constructorName: "ConstantSourceNode",
     contextMethod: "createConstantSource",
     kind: ["source"],
   },
   convolver: {
-    constructor: "ConvolverNode",
+    constructorName: "ConvolverNode",
     contextMethod: "createConvolver",
     kind: ["effect"],
   },
   destination: {
-    constructor: "AudioDestinationNode",
+    constructorName: "AudioDestinationNode",
     contextMethod: null,
     kind: ["destination"],
   },
   delay: {
-    constructor: "DelayNode",
+    constructorName: "DelayNode",
     contextMethod: "createDelay",
     kind: ["effect"],
   },
   dynamicsCompressor: {
-    constructor: "DynamicsCompressorNode",
+    constructorName: "DynamicsCompressorNode",
     contextMethod: "createDynamicsCompressor",
     kind: ["effect"],
   },
   gain: {
-    constructor: "GainNode",
+    constructorName: "GainNode",
     contextMethod: "createGain",
     kind: ["effect"],
   },
   iirFilter: {
-    constructor: "IIRFilterNode",
+    constructorName: "IIRFilterNode",
     contextMethod: "createIIRFilter",
     kind: ["effect"],
   },
   mediaElementSource: {
-    constructor: "MediaElementAudioSourceNode",
+    constructorName: "MediaElementAudioSourceNode",
     contextMethod: "createMediaElementSource",
     kind: ["source"],
   },
   mediaStreamDestination: {
-    constructor: "MediaStreamAudioDestinationNode",
+    constructorName: "MediaStreamAudioDestinationNode",
     contextMethod: "createMediaStreamDestination",
     kind: ["destination"],
   },
   mediaStreamSource: {
-    constructor: "MediaStreamAudioSourceNode",
+    constructorName: "MediaStreamAudioSourceNode",
     contextMethod: "createMediaStreamSource",
     kind: ["source"],
   },
   oscillator: {
-    constructor: "OscillatorNode",
+    constructorName: "OscillatorNode",
     contextMethod: "createOscillator",
     kind: ["source"],
   },
   panner: {
-    constructor: "PannerNode",
+    constructorName: "PannerNode",
     contextMethod: "createPanner",
     kind: ["effect"],
   },
   scheduledSource: {
-    constructor: "AudioScheduledSourceNode",
+    constructorName: "AudioScheduledSourceNode",
     contextMethod: null,
     kind: ["source"],
   },
   stereoPanner: {
-    constructor: "StereoPannerNode",
+    constructorName: "StereoPannerNode",
     contextMethod: "createStereoPanner",
     kind: ["effect"],
   },
   waveShaper: {
-    constructor: "WaveShaperNode",
+    constructorName: "WaveShaperNode",
     contextMethod: "createWaveShaper",
     kind: ["effect"],
   },
@@ -148,11 +148,10 @@ export type AudioNodeKind = "source" | "effect" | "destination"
  *
  */
 export type AudioNodeName<W extends WebAudioImplName = WebAudioImplName> = {
-  [K in keyof AudioNodes]: AudioNodes[K]["constructor"] extends WebAudioMemberName<W>
+  [K in keyof AudioNodes]: AudioNodes[K]["constructorName"] extends WebAudioMemberName<W>
     ? K
     : never
 }[keyof AudioNodes]
-
 
 /**
  * The name of an AudioNode subclass that can be directly instantiated.
@@ -194,7 +193,7 @@ export type CreatableAudioNodeName<
 export type AudioNodeConstructorName<
   K extends AudioNodeName<W>,
   W extends WebAudioImplName = WebAudioImplName
-> = AudioNodes[K]["constructor"]
+> = AudioNodes[K]["constructorName"]
 
 /**
  * The method name used on an AudioContext to create a specific type of AudioNode.

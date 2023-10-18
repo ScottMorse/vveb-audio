@@ -7,11 +7,13 @@ export const listenOnce = <
 >(
   target: Target,
   type: Target extends TypedEventTarget ? StringKeyOf<E> : string,
-  listener: (...args: any[]) => any
+  listener: (...args: any[]) => any,
+  removeOnCondition?: () => boolean
 ) => {
   const removeListener = () => {
     listener()
-    target.removeEventListener(type as StringKeyOf<E>, listener)
+    if ((removeOnCondition && removeOnCondition()) ?? true)
+      target.removeEventListener(type as StringKeyOf<E>, listener)
   }
   target.addEventListener(type as StringKeyOf<E>, removeListener)
 }

@@ -1,8 +1,9 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockChannelSplitterNodeInternals
   extends MockAudioNodeInternals
-  implements ChannelSplitterNode
+  implements OmitEventTarget<ChannelSplitterNode>
 {
   get numberOfOutputs() {
     return 6

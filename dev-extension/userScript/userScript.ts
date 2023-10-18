@@ -1,5 +1,9 @@
 import { createLogger } from "@@core/logger"
 import { AudioContextInstance, createEngine, Engine } from "@@core/webAudio"
+import {
+  createMockWebAudio,
+  MockWebAudioEngine,
+} from "@@test-utils/mockWebAudio"
 import * as StandardizedAudioContext from "standardized-audio-context"
 ;(window as any).sac = StandardizedAudioContext
 
@@ -22,6 +26,7 @@ const createTime = (context: AudioContextInstance) => {
 interface VVUtils {
   ctx: AudioContextInstance<"live", "native">
   engine: Engine<"native">
+  mockEngine: MockWebAudioEngine
   sac: typeof StandardizedAudioContext & {
     ctx: AudioContextInstance<"live", "standardized">
     engine: Engine<"standardized">
@@ -31,6 +36,7 @@ interface VVUtils {
   testParam: AudioParam
   t: Time
   resetTestNode(): void
+  sampleRateStandard: number
 }
 
 declare global {
@@ -45,6 +51,7 @@ const run = () => {
   const sacEngine = createEngine({ api: "standardized" })
 
   let isInitialized = false
+  let testNodeInterval: number
   const initialize = () => {
     logger.info(isInitialized ? "Utils updated" : "Utils initialized")
 
@@ -66,6 +73,7 @@ const run = () => {
     window.vv = {
       ctx,
       engine,
+      mockEngine: createMockWebAudio(),
       sac: {
         ...StandardizedAudioContext,
         ctx: sacCtx,
@@ -78,6 +86,7 @@ const run = () => {
       resetTestNode: () => {
         window.vv.testNode = createTestNode()
       },
+      sampleRateStandard: 48_000,
     }
 
     ctx.onstatechange = () => {
@@ -88,8 +97,10 @@ const run = () => {
     }
 
     const runTestNodeWatcher = () => {
+      clearInterval(testNodeInterval)
+
       let prevTestParamValue = vv.testParam.value
-      setInterval(() => {
+      testNodeInterval = setInterval(() => {
         if (prevTestParamValue !== vv.testParam.value) {
           logger.debug(`Test Param: ${vv.testParam.value}`)
           prevTestParamValue = vv.testParam.value
@@ -101,7 +112,7 @@ const run = () => {
   }
 
   engine.onCanStart(() => {
-    if(isInitialized) return
+    if (isInitialized) return
     logger.info("Contexts can start")
     initialize()
   })

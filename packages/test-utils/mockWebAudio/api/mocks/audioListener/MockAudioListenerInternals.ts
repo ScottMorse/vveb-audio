@@ -1,5 +1,5 @@
-import { MockInternals } from "../../baseMock"
-import { createMockAudioParam } from "../audioParam/AudioParam"
+import { MockEnvironment, MockInternals } from "../../mockFactory"
+import { createMockAudioParam } from "../audioParam/MockAudioParam"
 
 const validatePoint = (value: number, method: string) => {
   value = Number(value)
@@ -20,8 +20,12 @@ export class MockAudioListenerInternals
   extends MockInternals<AudioListener>
   implements AudioListener
 {
-  constructor(protected readonly context: BaseAudioContext) {
-    super()
+  constructor(
+    mock: AudioListener,
+    mockEnvironment: MockEnvironment,
+    protected readonly context: BaseAudioContext
+  ) {
+    super(mock, mockEnvironment)
   }
 
   get forwardX() {
@@ -57,12 +61,6 @@ export class MockAudioListenerInternals
     upY: number,
     upZ: number
   ): void {
-    if (arguments.length < 6) {
-      throw new TypeError(
-        `Failed to execute 'setOrientation' on 'AudioListener': 6 arguments required, but only ${arguments.length} present.`
-      )
-    }
-
     forwardX = validatePoint(forwardX, "setOrientation")
     forwardY = validatePoint(forwardY, "setOrientation")
     forwardZ = validatePoint(forwardZ, "setOrientation")
@@ -80,12 +78,6 @@ export class MockAudioListenerInternals
 
   /** @deprecated Included due to presence in common browsers */
   setPosition(x: number, y: number, z: number): void {
-    if (arguments.length < 3) {
-      throw new TypeError(
-        `Failed to execute 'setPosition' on 'AudioListener': 3 arguments required, but only ${arguments.length} present.`
-      )
-    }
-
     x = validatePoint(x, "setPosition")
     y = validatePoint(y, "setPosition")
     z = validatePoint(z, "setPosition")
@@ -107,27 +99,72 @@ export class MockAudioListenerInternals
     return this._upZ
   }
 
-  protected _forwardX = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _forwardX = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 
-  protected _forwardY = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _forwardY = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 
-  protected _forwardZ = createMockAudioParam(this.context, {
-    defaultValue: -1,
-    ...AUDIO_PARAM_OPTIONS,
-  })
+  protected _forwardZ = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    {
+      defaultValue: -1,
+      ...AUDIO_PARAM_OPTIONS,
+    }
+  )
 
-  protected _positionX = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _positionX = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 
-  protected _positionY = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _positionY = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 
-  protected _positionZ = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _positionZ = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 
-  protected _upX = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _upX = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 
-  protected _upY = createMockAudioParam(this.context, {
-    defaultValue: 1,
-    ...AUDIO_PARAM_OPTIONS,
-  })
+  protected _upY = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    {
+      defaultValue: 1,
+      ...AUDIO_PARAM_OPTIONS,
+    }
+  )
 
-  protected _upZ = createMockAudioParam(this.context, AUDIO_PARAM_OPTIONS)
+  protected _upZ = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    AUDIO_PARAM_OPTIONS
+  )
 }

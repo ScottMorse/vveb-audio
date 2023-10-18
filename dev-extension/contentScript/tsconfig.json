@@ -1,6 +1,6 @@
 {
   "extends": "../../config/chromeExtension/tsconfig.json",
-    "baseUrl": ".",
+  "baseUrl": ".",
   "paths": {
     "@@core/*": ["../../node_modules/@vveb-audio/core/*"]
   },

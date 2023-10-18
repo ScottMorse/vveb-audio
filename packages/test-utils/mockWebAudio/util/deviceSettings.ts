@@ -5,13 +5,19 @@
  *
  * These settings are global since they affect the global Web Audio API.
  */
-
+import { DeeplyPartial } from "@vveb-audio/core/internal/util/types"
+import merge from "lodash/merge"
+import round from "lodash/round"
 import { createGroupId } from "./mediaStream"
 
 export interface DeviceSettings {
-  maxChannels: number
+  audioContextBaseLatency: number
+  audioContextOutputLatency: number
+  destinationMaxChannelCount: number
+  audioBufferMaxChannelCount: number
   minSampleRate: number
   maxSampleRate: number
+  maxFrameLength: number
   mediaTrackCapabilities: Omit<MediaTrackCapabilities, "deviceId">
   mediaTrackSettings: Omit<MediaTrackSettings, "deviceId">
 }
@@ -19,24 +25,24 @@ export interface DeviceSettings {
 const DEFAULT_GROUP_ID = createGroupId()
 
 const DEFAULT_DEVICE_SETTINGS: DeviceSettings = {
-  maxChannels: 32,
+  audioContextBaseLatency: 0.01,
+  audioContextOutputLatency: 0.01,
+  destinationMaxChannelCount: 2,
+  audioBufferMaxChannelCount: 32,
   minSampleRate: 3_000,
   maxSampleRate: 768_000,
+  maxFrameLength: 100_000_000,
   mediaTrackCapabilities: {
     aspectRatio: { max: 16, min: 4 },
     autoGainControl: [true, false],
     channelCount: { max: 2, min: 1 },
-    cursor: ["always", "motion", "never"],
     displaySurface: "monitor",
     echoCancellation: [true, false],
     facingMode: ["user", "environment", "left", "right"],
     frameRate: { max: 60, min: 1 },
     groupId: DEFAULT_GROUP_ID,
     height: { max: 1080, min: 480 },
-    latency: { max: 0.5, min: 0 },
-    logicalSurface: true,
     noiseSuppression: [true, false],
-    resizeMode: ["none", "crop-and-scale"],
     sampleRate: { max: 48000, min: 8000 },
     sampleSize: { max: 24, min: 8 },
     width: { max: 1920, min: 640 },
@@ -53,20 +59,30 @@ const DEFAULT_DEVICE_SETTINGS: DeviceSettings = {
     groupId: DEFAULT_GROUP_ID,
     sampleRate: 48000,
     sampleSize: 16,
-    restrictOwnAudio: false,
   },
 }
 
-const GLOBAL_DEVICE_SETTINGS = {
-  ...DEFAULT_DEVICE_SETTINGS,
+const validateDeviceSettings = (settings: DeviceSettings) => {
+  if (settings.minSampleRate > settings.maxSampleRate) {
+    throw new RangeError(
+      `${ERROR_PREFIX}minSampleRate (${settings.minSampleRate}) must be less than or equal to maxSampleRate (${settings.maxSampleRate})`
+    )
+  }
+
+  throwZeroOrNegativeError(
+    "destinationMaxChannelCount",
+    settings.destinationMaxChannelCount
+  )
+  throwZeroOrNegativeError("minSampleRate", settings.minSampleRate)
+  throwZeroOrNegativeError("maxSampleRate", settings.maxSampleRate)
+
+  return settings
 }
 
 export const createDeviceSettings = (
-  settings?: Partial<DeviceSettings>
-): DeviceSettings => ({
-  ...DEFAULT_DEVICE_SETTINGS,
-  ...settings,
-})
+  settings?: DeeplyPartial<DeviceSettings>
+): DeviceSettings =>
+  validateDeviceSettings(merge({}, DEFAULT_DEVICE_SETTINGS, settings))
 
 const ERROR_PREFIX =
   "[@@test-utils]: Error setting mock Web Audio API device settings: "
@@ -79,32 +95,12 @@ const throwZeroOrNegativeError = (key: keyof DeviceSettings, value: number) => {
   }
 }
 
-export const getGlobalDeviceSetting = <K extends keyof DeviceSettings>(
-  key: K
-): DeviceSettings[K] => GLOBAL_DEVICE_SETTINGS[key]
-
-export const resetGlobalDeviceSettings = () =>
-  Object.assign(GLOBAL_DEVICE_SETTINGS, DEFAULT_DEVICE_SETTINGS)
-
-export interface SetGlobalDeviceSettingsOptions {
-  resetOtherFields?: boolean
-}
-
-/** @todo review and improve, */
-export const validateDeviceSettings = (settings: DeviceSettings) => {
-  if (settings.minSampleRate > settings.maxSampleRate) {
-    throw new RangeError(
-      `${ERROR_PREFIX}minSampleRate (${GLOBAL_DEVICE_SETTINGS.minSampleRate}) must be less than or equal to maxSampleRate (${GLOBAL_DEVICE_SETTINGS.maxSampleRate})`
-    )
+export const formatSampleRate = (rate: number, roundInt?: boolean) => {
+  const length = (roundInt ? round(rate) : rate).toFixed(0).length
+  if (length > 6) {
+    return round(rate, -(length - 6))
+      .toExponential()
+      .replace(/\.\d{4}e/g, (x) => x.slice(0, 5) + "0e")
   }
-
-  throwZeroOrNegativeError("maxChannels", GLOBAL_DEVICE_SETTINGS.maxChannels)
-  throwZeroOrNegativeError(
-    "minSampleRate",
-    GLOBAL_DEVICE_SETTINGS.minSampleRate
-  )
-  throwZeroOrNegativeError(
-    "maxSampleRate",
-    GLOBAL_DEVICE_SETTINGS.maxSampleRate
-  )
+  return rate.toString()
 }

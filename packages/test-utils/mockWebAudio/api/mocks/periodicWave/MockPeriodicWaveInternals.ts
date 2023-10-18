@@ -1,5 +1,5 @@
-import { MockInternals } from "../../baseMock"
-import { MockBaseAudioContext } from "../audioContext/base/MockBaseAudioContext"
+import { isInstanceType } from "@@test-utils/mockWebAudio/util/instanceType"
+import { MockEnvironment, MockInternals } from "../../mockFactory"
 import {
   FourierCoefficientInvalidReason,
   getIsFourierCoefficientValid,
@@ -13,7 +13,7 @@ const throwReasonError = (
   switch (reason) {
     case "noIterator":
       throw new TypeError(
-        !!value && typeof value === "object"
+        !!value && (typeof value === "object" || typeof value === "function")
           ? `Failed to construct 'PeriodicWave': Failed to read the '${name}' property from 'PeriodicWaveOptions': The object must have a callable @@iterator property.`
           : `Failed to construct 'PeriodicWave': Failed to read the '${name}' property from 'PeriodicWaveOptions': The provided value cannot be converted to a sequence.`
       )
@@ -34,16 +34,21 @@ export class MockPeriodicWaveInternals
   implements PeriodicWave
 {
   // implement constructor args and validate them
-  constructor(context: BaseAudioContext, options?: PeriodicWaveOptions) {
-    super()
+  constructor(
+    mock: PeriodicWave,
+    mockEnvironment: MockEnvironment,
+    context: BaseAudioContext,
+    options?: PeriodicWaveOptions
+  ) {
+    super(mock, mockEnvironment)
 
-    if (arguments.length === 0) {
+    if (arguments.length <= 1) {
       throw new TypeError(
         "Failed to construct 'PeriodicWave': 1 argument required, but only 0 present."
       )
     }
 
-    if (!(context instanceof MockBaseAudioContext)) {
+    if (!isInstanceType(context, "BaseAudioContext", mockEnvironment.api)) {
       throw new TypeError(
         "Failed to construct 'PeriodicWave': parameter 1 is not of type 'BaseAudioContext'."
       )

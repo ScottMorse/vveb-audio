@@ -22,7 +22,7 @@ export class _AudioNodeUtility<
       : [options: AudioNodeOptions<T, W>]
   ): AudioNodeInstance<T, W> {
     {
-      return new (this.api as any)[AUDIO_NODES[type]["constructor"]](
+      return new (this.api as any)[AUDIO_NODES[type]["constructorName"]](
         context,
         options
       )

@@ -1,6 +1,10 @@
-import { MockInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
-import { flipInt } from "@@test-utils/mockWebAudio/util/number"
+import { formatSampleRate } from "@@test-utils/mockWebAudio/util/deviceSettings"
+import {
+  convertSigned32Int,
+  convertUnsigned32Int,
+} from "@@test-utils/mockWebAudio/util/number"
+import { MockEnvironment } from "../../mockFactory/createMockFactory"
+import { MockInternals } from "../../mockFactory/mockInternals"
 
 const throwIfUndefined = (value: any, name: string): void => {
   if (value === undefined) {
@@ -16,18 +20,17 @@ const validateChannelNumber = (
   numberOfChannels: number
 ) => {
   channelNumber =
-    typeof channelNumber === "number" && isFinite(channelNumber)
-      ? method === "getChannelData"
-        ? flipInt(channelNumber)
-        : channelNumber
-      : 0
+    method === "getChannelData"
+      ? convertUnsigned32Int(channelNumber)
+      : convertSigned32Int(channelNumber)
 
   if (channelNumber < 0 || channelNumber >= numberOfChannels) {
+    const floored = Math.floor(channelNumber)
     throw new DOMException(
       // we all love the consistency of JS APIs
       method === "getChannelData"
-        ? `Failed to execute 'getChannelData' on 'AudioBuffer': channel index (${channelNumber}) exceeds number of channels (${numberOfChannels})`
-        : `Failed to execute '${method}' on 'AudioBuffer': The channelNumber provided (${channelNumber}) is outside the range [0, ${
+        ? `Failed to execute 'getChannelData' on 'AudioBuffer': channel index (${floored}) exceeds number of channels (${numberOfChannels})`
+        : `Failed to execute '${method}' on 'AudioBuffer': The channelNumber provided (${floored}) is outside the range [0, ${
             numberOfChannels - 1
           }].`,
       "IndexSizeError"
@@ -37,8 +40,12 @@ const validateChannelNumber = (
 }
 
 export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
-  constructor(options: AudioBufferOptions) {
-    super()
+  constructor(
+    mock: AudioBuffer,
+    mockEnvironment: MockEnvironment,
+    options: AudioBufferOptions
+  ) {
+    super(mock, mockEnvironment)
 
     options = this.validateOptions(options)
 
@@ -62,7 +69,7 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
   copyFromChannel(
     destination: Float32Array,
     channelNumber: number,
-    startInChannel = 0
+    _bufferOffset = 0
   ): void {
     if (arguments.length < 2) {
       throw new TypeError(
@@ -76,21 +83,17 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
       )
     }
 
-    channelNumber = validateChannelNumber(
+    validateChannelNumber(
       channelNumber,
       "copyFromChannel",
       this.numberOfChannels
     )
-    const source = this.getChannelData(channelNumber)
-    for (let i = 0; i < destination.length; i++) {
-      destination[i] = source[startInChannel + i] || 0
-    }
   }
 
   copyToChannel(
     source: Float32Array,
     channelNumber: number,
-    startInChannel = 0
+    _bufferOffset = 0
   ): void {
     if (arguments.length < 2) {
       throw new TypeError(
@@ -104,15 +107,7 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
       )
     }
 
-    channelNumber = validateChannelNumber(
-      channelNumber,
-      "copyToChannel",
-      this.numberOfChannels
-    )
-    const destination = this.getChannelData(channelNumber)
-    for (let i = 0; i < source.length; i++) {
-      destination[startInChannel + i] = source[i]
-    }
+    validateChannelNumber(channelNumber, "copyToChannel", this.numberOfChannels)
   }
 
   get duration(): number {
@@ -131,6 +126,7 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
       "getChannelData",
       this.numberOfChannels
     )
+
     return this._channelsData[channelNumber]
   }
 
@@ -161,7 +157,15 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
     const newOptions = { ...options }
 
     throwIfUndefined(options.length, "length")
-    newOptions.length = Math.floor(flipInt(options.length))
+    newOptions.length = Math.floor(convertUnsigned32Int(options.length))
+
+    if (this._length >= this.mockEnvironment.deviceSettings.maxFrameLength) {
+      throw new DOMException(
+        `Failed to construct 'AudioBuffer': createBuffer(${this._numberOfChannels}, ${this._length}, ${this._sampleRate}) failed.`,
+        "NotSupportedError"
+      )
+    }
+
     if (!(newOptions.length > 0)) {
       throw new DOMException(
         "Failed to construct 'AudioBuffer': The number of frames provided (0) is less than or equal to the minimum bound (0).",
@@ -178,18 +182,20 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
     }
     if (
       !(
-        newOptions.sampleRate >
-          getEngineContext(this).deviceSettings.minSampleRate &&
-        newOptions.sampleRate <
-          getEngineContext(this).deviceSettings.maxSampleRate
+        newOptions.sampleRate >=
+          this.mockEnvironment.deviceSettings.minSampleRate &&
+        newOptions.sampleRate <=
+          this.mockEnvironment.deviceSettings.maxSampleRate
       )
     ) {
       throw new DOMException(
-        `Failed to construct 'AudioBuffer': The sample rate provided (${
-          newOptions.sampleRate
-        }) is outside the range [${
-          getEngineContext(this).deviceSettings.minSampleRate
-        }, ${getEngineContext(this).deviceSettings.maxSampleRate}].`,
+        `Failed to construct 'AudioBuffer': The sample rate provided (${formatSampleRate(
+          newOptions.sampleRate,
+          newOptions.sampleRate >
+            this.mockEnvironment.deviceSettings.maxSampleRate
+        )}) is outside the range [${
+          this.mockEnvironment.deviceSettings.minSampleRate
+        }, ${this.mockEnvironment.deviceSettings.maxSampleRate}].`,
         "NotSupportedError"
       )
     }
@@ -197,20 +203,16 @@ export class MockAudioBufferInternals extends MockInternals<AudioBuffer> {
     newOptions.numberOfChannels =
       options.numberOfChannels === undefined
         ? 1
-        : Math.floor(flipInt(options.numberOfChannels))
+        : Math.floor(convertUnsigned32Int(options.numberOfChannels))
     if (
       !(
         newOptions.numberOfChannels > 0 &&
         newOptions.numberOfChannels <=
-          getEngineContext(this).deviceSettings.maxChannels
+          this.mockEnvironment.deviceSettings.audioBufferMaxChannelCount
       )
     ) {
       throw new DOMException(
-        `Failed to construct 'AudioBuffer': The number of channels provided (${
-          newOptions.numberOfChannels
-        }) is outside the range [1, ${
-          getEngineContext(this).deviceSettings.maxChannels
-        }].`,
+        `Failed to construct 'AudioBuffer': The number of channels provided (${newOptions.numberOfChannels}) is outside the range [1, ${this.mockEnvironment.deviceSettings.audioBufferMaxChannelCount}].`,
         "NotSupportedError"
       )
     }

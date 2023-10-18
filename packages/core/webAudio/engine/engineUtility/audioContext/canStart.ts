@@ -10,10 +10,17 @@ class Listener extends TypedEventTarget<{
 
   protected _listen() {
     for (const event of TRIGGERING_EVENTS) {
-      listenOnce(window, event, () => {
-        this.dispatchEvent(new Event("canStart"))
-        this.canStart = true
-      })
+      listenOnce(
+        window,
+        event,
+        () => {
+          if (document.hasFocus()) {
+            this.dispatchEvent(new Event("canStart"))
+            this.canStart = true
+          }
+        },
+        () => document.hasFocus()
+      )
     }
   }
 

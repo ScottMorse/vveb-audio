@@ -1,11 +1,26 @@
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockChannelMergerNodeInternals } from "./MockChannelMergerNodeInternals"
 
-export class MockChannelMergerNode
-  extends MockAudioNode<MockChannelMergerNodeInternals>
-  implements ChannelMergerNode
-{
-  constructor(context: BaseAudioContext, options?: ChannelMergerOptions) {
-    super(context, options, new MockChannelMergerNodeInternals(context, options))
+export const createChannelMergerNodeMock = createMockFactory<
+  typeof ChannelMergerNode,
+  MockChannelMergerNodeInternals
+>(({ setInternals, mockEnvironment }) => {
+  @MockConstructorName("ChannelMergerNode")
+  class MockChannelMergerNode
+    extends mockEnvironment.api.AudioNode
+    implements ChannelMergerNode
+  {
+    constructor(context: BaseAudioContext, options?: ChannelMergerOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockChannelMergerNodeInternals(this, mockEnvironment, context)
+      )
+    }
   }
-}
+
+  return MockChannelMergerNode
+})

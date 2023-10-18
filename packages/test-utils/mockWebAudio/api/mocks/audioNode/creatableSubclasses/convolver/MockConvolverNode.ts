@@ -1,20 +1,34 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockConvolverNodeInternals } from "./MockConvolverNodeInternals"
 
-export class MockConvolverNode
-  extends MockAudioNode<MockConvolverNodeInternals>
-  implements ConvolverNode
-{
-  constructor(context: BaseAudioContext, options?: ConvolverOptions) {
-    super(context, options, new MockConvolverNodeInternals(context, options))
+export const createConvolverNodeMock = createMockFactory<
+  typeof ConvolverNode,
+  MockConvolverNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("ConvolverNode")
+  class MockConvolverNode
+    extends mockEnvironment.api.AudioNode
+    implements ConvolverNode
+  {
+    constructor(context: BaseAudioContext, options?: ConvolverOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockConvolverNodeInternals(this, mockEnvironment, context, options)
+      )
+    }
+
+    get buffer(): AudioBuffer | null {
+      return getInternals(this).buffer
+    }
+
+    get normalize(): boolean {
+      return getInternals(this).normalize
+    }
   }
 
-  get buffer() {
-    return getInternals(this).buffer
-  }
-
-  get normalize() {
-    return getInternals(this).normalize
-  }
-}
+  return MockConvolverNode
+})

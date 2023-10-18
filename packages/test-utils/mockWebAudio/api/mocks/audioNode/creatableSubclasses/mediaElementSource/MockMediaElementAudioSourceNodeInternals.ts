@@ -1,14 +1,18 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
+import { MockEnvironment } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockMediaElementAudioSourceNodeInternals
   extends MockAudioNodeInternals
-  implements MediaElementAudioSourceNode
+  implements OmitEventTarget<MediaElementAudioSourceNode>
 {
   constructor(
+    mock: MediaElementAudioSourceNode,
+    mockEnvironment: MockEnvironment,
     context: BaseAudioContext,
     options: MediaElementAudioSourceOptions
   ) {
-    super(context)
+    super(mock, mockEnvironment, context)
     this._mediaElement = options?.mediaElement
   }
 

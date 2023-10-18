@@ -1,17 +1,34 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockWaveShaperNodeInternals } from "./MockWaveShaperNodeInternals"
 
-export class MockWaveShaperNode extends MockAudioNode<MockWaveShaperNodeInternals> implements WaveShaperNode {
-  constructor(context: BaseAudioContext, options?: WaveShaperOptions) {
-    super(context, options, new MockWaveShaperNodeInternals(context, options))
+export const createWaveShaperNodeMock = createMockFactory<
+  typeof WaveShaperNode,
+  MockWaveShaperNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("WaveShaperNode")
+  class MockWaveShaperNode
+    extends mockEnvironment.api.AudioNode
+    implements WaveShaperNode
+  {
+    constructor(context: BaseAudioContext, options?: WaveShaperOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockWaveShaperNodeInternals(this, mockEnvironment, context)
+      )
+    }
+
+    get curve(): Float32Array | null {
+      return getInternals(this).curve
+    }
+
+    get oversample(): OverSampleType {
+      return getInternals(this).oversample
+    }
   }
 
-  get curve() {
-    return getInternals(this).curve
-  }
-
-  get oversample() {
-    return getInternals(this).oversample
-  }
-}
+  return MockWaveShaperNode
+})

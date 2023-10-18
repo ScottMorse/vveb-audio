@@ -1,16 +1,21 @@
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { MockEnvironment } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
 import { MockAudioNodeInternals } from "../base/MockAudioNodeInternals"
 
 export class MockAudioDestinationNodeInternals
   extends MockAudioNodeInternals
-  implements AudioDestinationNode
+  implements OmitEventTarget<AudioDestinationNode>
 {
-  constructor(context: BaseAudioContext) {
-    super(context)
+  constructor(
+    mock: AudioDestinationNode,
+    mockEnvironment: MockEnvironment,
+    context: BaseAudioContext
+  ) {
+    super(mock, mockEnvironment, context)
   }
 
   get maxChannelCount() {
-    return getEngineContext(this).deviceSettings.maxChannels
+    return this.mockEnvironment.deviceSettings.destinationMaxChannelCount
   }
 
   get numberOfInputs() {

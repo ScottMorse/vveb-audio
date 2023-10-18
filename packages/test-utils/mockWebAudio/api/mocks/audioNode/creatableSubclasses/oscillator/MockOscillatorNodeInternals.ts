@@ -1,13 +1,19 @@
+import { MockEnvironment } from "@@test-utils/mockWebAudio/api/mockFactory"
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
 import { MockAudioScheduledSourceNodeInternals } from "../../scheduledSource/MockAudioScheduledSourceNodeInternals"
 
 export class MockOscillatorNodeInternals
   extends MockAudioScheduledSourceNodeInternals
-  implements OscillatorNode
+  implements OmitEventTarget<OscillatorNode>
 {
-  constructor(context: BaseAudioContext, _options?: OscillatorOptions) {
-    super(context)
+  constructor(
+    mock: OscillatorNode,
+    mockEnvironment: MockEnvironment,
+    context: BaseAudioContext,
+    _options?: OscillatorOptions
+  ) {
+    super(mock, mockEnvironment, context)
   }
 
   get channelCount() {
@@ -33,22 +39,28 @@ export class MockOscillatorNodeInternals
   }
 
   protected _detune = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 0,
       minValue: -153600,
       maxValue: 153600,
+      name: "Oscillator.detune",
     }
   )
 
   protected _frequency = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 440,
       minValue: -22050,
       maxValue: 22050,
+      name: "Oscillator.frequency",
     }
   )
 

@@ -1,45 +1,35 @@
-import { MockInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { MockInternals } from "@@test-utils/mockWebAudio/api/mockFactory"
 import { sanitizeEventCallback } from "@@test-utils/mockWebAudio/util/events"
-import { createMockAudioListener } from "../../audioListener/MockAudioListener"
-import { createMockAudioDestinationNode } from "../../audioNode/destination/MockAudioDestinationNode"
 import { getIsFourierCoefficientValid } from "../../periodicWave/fourierUtils"
 import { createMockAudioWorklet } from "../../worklet"
 
 export const CURRENT_TIME_EVENT = "_currentTime"
 
-export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudioContext>
+export class MockBaseAudioContextInternals<
+    C extends BaseAudioContext = BaseAudioContext
+  >
   extends MockInternals<C>
-  implements BaseAudioContext
+  implements
+    Omit<BaseAudioContext, keyof EventTarget | "listener" | "destination">
 {
-  readonly eventTarget = new EventTarget()
-
-  addEventListener<K extends "statechange">(
-    type: K,
-    listener: (this: BaseAudioContext, ev: BaseAudioContextEventMap[K]) => any,
-    options?: boolean | AddEventListenerOptions | undefined
-  ) {
-    this.eventTarget.addEventListener(type, listener, options)
-  }
-
   get audioWorklet() {
     return this._audioWorklet
   }
 
   createAnalyser() {
-    return new (getEngineContext(this).mockApi.AnalyserNode)(this.mock)
+    return new this.mockEnvironment.api.AnalyserNode(this.mock)
   }
 
   createAudioBufferSource() {
-    return new (getEngineContext(this).mockApi.AudioBufferSourceNode)(this.mock)
+    return new this.mockEnvironment.api.AudioBufferSourceNode(this.mock)
   }
 
   createBiquadFilter() {
-    return new (getEngineContext(this).mockApi.BiquadFilterNode)(this.mock)
+    return new this.mockEnvironment.api.BiquadFilterNode(this.mock)
   }
 
   createBuffer(numberOfChannels: number, length: number, sampleRate: number) {
-    return new (getEngineContext(this).mockApi.AudioBuffer)({
+    return new this.mockEnvironment.api.AudioBuffer({
       length,
       numberOfChannels,
       sampleRate,
@@ -47,58 +37,56 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
   }
 
   createBufferSource() {
-    return new (getEngineContext(this).mockApi.AudioBufferSourceNode)(this.mock)
+    return new this.mockEnvironment.api.AudioBufferSourceNode(this.mock)
   }
 
   createChannelMerger(numberOfInputs?: number) {
-    return new (getEngineContext(this).mockApi.ChannelMergerNode)(this.mock, {
+    return new this.mockEnvironment.api.ChannelMergerNode(this.mock, {
       numberOfInputs,
     })
   }
 
   createChannelSplitter(numberOfOutputs?: number) {
-    return new (getEngineContext(this).mockApi.ChannelSplitterNode)(this.mock, {
+    return new this.mockEnvironment.api.ChannelSplitterNode(this.mock, {
       numberOfOutputs,
     })
   }
 
   createConstantSource() {
-    return new (getEngineContext(this).mockApi.ConstantSourceNode)(this.mock)
+    return new this.mockEnvironment.api.ConstantSourceNode(this.mock)
   }
 
   createConvolver() {
-    return new (getEngineContext(this).mockApi.ConvolverNode)(this.mock)
+    return new this.mockEnvironment.api.ConvolverNode(this.mock)
   }
 
   createDelay(maxDelayTime?: number) {
-    return new (getEngineContext(this).mockApi.DelayNode)(this.mock, {
+    return new this.mockEnvironment.api.DelayNode(this.mock, {
       maxDelayTime,
     })
   }
 
   createDynamicsCompressor() {
-    return new (getEngineContext(this).mockApi.DynamicsCompressorNode)(
-      this.mock
-    )
+    return new this.mockEnvironment.api.DynamicsCompressorNode(this.mock)
   }
 
   createGain() {
-    return new (getEngineContext(this).mockApi.GainNode)(this.mock)
+    return new this.mockEnvironment.api.GainNode(this.mock)
   }
 
   createIIRFilter(feedback: number[], feedforward: number[]) {
-    return new (getEngineContext(this).mockApi.IIRFilterNode)(this.mock, {
+    return new this.mockEnvironment.api.IIRFilterNode(this.mock, {
       feedback,
       feedforward,
     })
   }
 
   createOscillator() {
-    return new (getEngineContext(this).mockApi.OscillatorNode)(this.mock)
+    return new this.mockEnvironment.api.OscillatorNode(this.mock)
   }
 
   createPanner() {
-    return new (getEngineContext(this).mockApi.PannerNode)(this.mock)
+    return new this.mockEnvironment.api.PannerNode(this.mock)
   }
 
   createPeriodicWave(
@@ -155,12 +143,16 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
       )
     }
     if (errors.noIterator) {
+      const errorObj = isValidReal ? imag : real
       throw new TypeError(
-        "Failed to execute 'createPeriodicWave' on 'BaseAudioContext': The provided value cannot be converted to a sequence."
+        !!errorObj &&
+        (typeof errorObj === "object" || typeof errorObj === "function")
+          ? "Failed to execute 'createPeriodicWave' on 'BaseAudioContext': The object must have a callable @@iterator property."
+          : "Failed to execute 'createPeriodicWave' on 'BaseAudioContext': The provided value cannot be converted to a sequence."
       )
     }
 
-    return new (getEngineContext(this).mockApi.PeriodicWave)(this, {
+    return new this.mockEnvironment.api.PeriodicWave(this.mock, {
       real,
       imag,
       ...constraints,
@@ -175,11 +167,11 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
   }
 
   createStereoPanner() {
-    return new (getEngineContext(this).mockApi.StereoPannerNode)(this.mock)
+    return new this.mockEnvironment.api.StereoPannerNode(this.mock)
   }
 
   createWaveShaper() {
-    return new (getEngineContext(this).mockApi.WaveShaperNode)(this.mock)
+    return new this.mockEnvironment.api.WaveShaperNode(this.mock)
   }
 
   get currentTime() {
@@ -192,7 +184,7 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
     errorCallback?: null | ((error: DOMException) => void)
   ): Promise<AudioBuffer> {
     try {
-      const buffer = new (getEngineContext(this).mockApi.AudioBuffer)({
+      const buffer = new this.mockEnvironment.api.AudioBuffer({
         length: audioData.byteLength,
         sampleRate: this.sampleRate,
       }) as unknown as AudioBuffer
@@ -204,32 +196,12 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
     }
   }
 
-  get destination() {
-    return this._destination
-  }
-
-  dispatchEvent(event: Event): boolean {
-    return this.eventTarget.dispatchEvent(event)
-  }
-
-  get listener() {
-    return this._listener
-  }
-
   get onstatechange() {
     return this._onstatechange
   }
 
   set onstatechange(value) {
     this._onstatechange = sanitizeEventCallback(value)
-  }
-
-  removeEventListener<K extends "statechange">(
-    type: K,
-    listener: (this: BaseAudioContext, ev: BaseAudioContextEventMap[K]) => any,
-    options?: boolean | EventListenerOptions | undefined
-  ) {
-    this.eventTarget.removeEventListener(type, listener, options)
   }
 
   get sampleRate() {
@@ -244,14 +216,7 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
 
   protected _currentPerformanceTime = 0
 
-  protected _audioWorklet = createMockAudioWorklet(getEngineContext(this))
-
-  protected _destination = createMockAudioDestinationNode(
-    getEngineContext(this),
-    this
-  )
-
-  protected _listener = createMockAudioListener(getEngineContext(this), this)
+  protected _audioWorklet = createMockAudioWorklet(this.mockEnvironment.api)
 
   protected _sampleRate = 44100
 
@@ -260,6 +225,6 @@ export class MockBaseAudioContextInternals<C extends BaseAudioContext = BaseAudi
   protected _onstatechange: ((e: Event) => any) | null = null
 
   protected _onCurrentTimeChanged() {
-    this.dispatchEvent(new Event(CURRENT_TIME_EVENT))
+    this.mock.dispatchEvent(new Event(CURRENT_TIME_EVENT))
   }
 }

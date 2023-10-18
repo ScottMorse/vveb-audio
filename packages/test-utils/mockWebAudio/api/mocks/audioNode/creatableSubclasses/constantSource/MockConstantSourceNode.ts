@@ -1,16 +1,30 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioScheduledSourceNode } from "../../scheduledSource"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockConstantSourceNodeInternals } from "./MockConstantSourceNodeInternals"
 
-export class MockConstantSourceNode
-  extends MockAudioScheduledSourceNode<MockConstantSourceNodeInternals>
-  implements ConstantSourceNode
-{
-  constructor(context: BaseAudioContext) {
-    super(context, new MockConstantSourceNodeInternals(context))
+export const createConstantSourceNodeMock = createMockFactory<
+  typeof ConstantSourceNode,
+  MockConstantSourceNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("ConstantSourceNode")
+  class MockConstantSourceNode
+    extends mockEnvironment.api.AudioScheduledSourceNode
+    implements ConstantSourceNode
+  {
+    constructor(context: BaseAudioContext) {
+      const args: MockAudioNodeArgs = [context]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockConstantSourceNodeInternals(this, mockEnvironment, context)
+      )
+    }
+
+    get offset(): AudioParam {
+      return getInternals(this).offset
+    }
   }
 
-  get offset() {
-    return getInternals(this).offset
-  }
-}
+  return MockConstantSourceNode
+})

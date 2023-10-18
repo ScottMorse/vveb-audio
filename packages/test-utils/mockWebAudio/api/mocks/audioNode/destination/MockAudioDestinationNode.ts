@@ -1,32 +1,48 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { EngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
-import { MockAudioNode } from "../base/MockAudioNode"
+import {
+  createMockFactory,
+  MockWebAudioApi,
+} from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
 import { MockAudioDestinationNodeInternals } from "./MockAudioDestinationNodeInternals"
 
 const ALLOW_CONSTRUCTOR = Symbol("ALLOW_CONSTRUCTOR")
 
-export class MockAudioDestinationNode
-  extends MockAudioNode<MockAudioDestinationNodeInternals>
-  implements AudioDestinationNode
-{
-  constructor(context: BaseAudioContext, _allow?: typeof ALLOW_CONSTRUCTOR) {
-    super(context, {}, new MockAudioDestinationNodeInternals(context))
-    if (_allow !== ALLOW_CONSTRUCTOR) {
-      throw new TypeError("Illegal constructor")
+export const createAudioDestinationNodeMock = createMockFactory<
+  typeof AudioDestinationNode,
+  MockAudioDestinationNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("AudioDestinationNode")
+  class MockAudioDestinationNode
+    extends mockEnvironment.api.AudioNode
+    implements AudioDestinationNode
+  {
+    constructor(context: BaseAudioContext, _allow?: typeof ALLOW_CONSTRUCTOR) {
+      /**@todo better type all special mock constructor parameters */
+      super(...([context] as unknown as []))
+
+      if (_allow !== ALLOW_CONSTRUCTOR) {
+        throw new TypeError("Illegal constructor")
+      }
+
+      setInternals(
+        this,
+        new MockAudioDestinationNodeInternals(this, mockEnvironment, context)
+      )
+    }
+
+    get maxChannelCount(): number {
+      return getInternals(this).maxChannelCount
     }
   }
 
-  get maxChannelCount() {
-    return getInternals(this).maxChannelCount
-  }
-}
+  return MockAudioDestinationNode as typeof AudioDestinationNode
+})
 
 export const createMockAudioDestinationNode = (
-  engineContext: EngineContext,
+  api: MockWebAudioApi,
   context: BaseAudioContext
 ) =>
-  new (engineContext.mockApi
-    .AudioDestinationNode)(
-    context,
-    ALLOW_CONSTRUCTOR
+  new api.AudioDestinationNode(
+    /**@todo better type all special mock constructor parameters */
+    ...([context, ALLOW_CONSTRUCTOR] as unknown as [])
   )

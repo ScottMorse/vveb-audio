@@ -1,13 +1,27 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock";
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode";
-import { MockGainNodeInternals } from "./MockGainNodeInternals";
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
+import { MockGainNodeInternals } from "./MockGainNodeInternals"
 
-export class MockGainNode extends MockAudioNode<MockGainNodeInternals> implements GainNode {
-  constructor(context: BaseAudioContext, options?: GainOptions) {
-    super(context, options, new MockGainNodeInternals(context, options));
+export const createGainNodeMock = createMockFactory<
+  typeof GainNode,
+  MockGainNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("GainNode")
+  class MockGainNode extends mockEnvironment.api.AudioNode implements GainNode {
+    constructor(context: BaseAudioContext, options?: GainOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockGainNodeInternals(this, mockEnvironment, context, options)
+      )
+    }
+
+    get gain(): AudioParam {
+      return getInternals(this).gain
+    }
   }
 
-  get gain() {
-    return getInternals(this).gain;
-  }
-}
+  return MockGainNode
+})

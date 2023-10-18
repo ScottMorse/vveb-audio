@@ -1,8 +1,5 @@
-import {
-  AutomationTimeline,
-  ScheduledEvent,
-  ScheduledEventType,
-} from "./AutomationTimeline"
+import { AutomationTimeline } from "./AutomationTimeline"
+import { ScheduledEvent, ScheduledEventType } from "./scheduledEvents"
 
 export class ChromiumAutomationTimeline extends AutomationTimeline {
   handleTimeChange() {
@@ -31,21 +28,22 @@ export class ChromiumAutomationTimeline extends AutomationTimeline {
     // during target: target cancelled
     // same time as target start: if set last, target cancelled, otherwise target continues from set's value
     // same time as cancel: last called wins
-    for (const set of this._events.set) {
+    for (const setOp of this._events.set) {
       if (
-        set.data.time <= currentTime &&
-        /** @todo refactor condition */
-        set.data.time > (effectiveSet?.time ?? -Infinity) &&
+        // time is in past or at current time
+        setOp.data.time <= currentTime &&
+        setOp.data.time > (effectiveSet?.time ?? -Infinity) &&
+        // operation is latest call for given time
         !(
           effectiveSet &&
-          set.data.time === effectiveSet.time &&
-          set.callSequence < effectiveSet.callSequence
+          setOp.data.time === effectiveSet.time &&
+          setOp.callSequence < effectiveSet.callSequence
         )
       ) {
         effectiveSet = {
-          value: set.data.value,
-          time: set.data.time,
-          callSequence: set.callSequence,
+          value: setOp.data.value,
+          time: setOp.data.time,
+          callSequence: setOp.callSequence,
         }
       }
     }
@@ -56,20 +54,20 @@ export class ChromiumAutomationTimeline extends AutomationTimeline {
     // same time as another ramp: last call wins its ending value, but first call wins the ramp up to the final value
     // end within curve: throws error and does not seem to have any effect (probably should be guarded from scheduling at all)
     // end within target: takes over, new set at beginning of ramp
-    for (const ramp of this._events.ramp) {
+    for (const rampOp of this._events.ramp) {
       if (
-        ramp.data.endTime <= currentTime &&
-        ramp.data.endTime >= (effectiveSet?.time ?? -Infinity) &&
+        rampOp.data.endTime <= currentTime &&
+        rampOp.data.endTime >= (effectiveSet?.time ?? -Infinity) &&
         !(
           effectiveSet &&
-          ramp.data.endTime === effectiveSet.time &&
-          ramp.callSequence < effectiveSet.callSequence
+          rampOp.data.endTime === effectiveSet.time &&
+          rampOp.callSequence < effectiveSet.callSequence
         )
       ) {
         effectiveSet = {
-          value: ramp.data.value,
-          time: ramp.data.endTime,
-          callSequence: ramp.callSequence,
+          value: rampOp.data.value,
+          time: rampOp.data.endTime,
+          callSequence: rampOp.callSequence,
         }
       }
     }
@@ -81,8 +79,8 @@ export class ChromiumAutomationTimeline extends AutomationTimeline {
     // overlaps active curve: throws error
     // overlaps curve that threw error: begins curve that is interrupted by error curve's end value at its end time. this curve also sets its last value at its end time (UGH)
     // if error thrown, the final value is still next effective set at the end of the curve time...
-    for (const curve of this._events.curve) {
-      const endTime = curve.data.startTime + curve.data.duration
+    for (const curveOp of this._events.curve) {
+      const endTime = curveOp.data.startTime + curveOp.data.duration
       const isFinished = endTime <= currentTime
       /** @todo refactor this condition */
       if (
@@ -91,13 +89,13 @@ export class ChromiumAutomationTimeline extends AutomationTimeline {
         !(
           effectiveSet &&
           endTime === effectiveSet.time &&
-          curve.callSequence < effectiveSet.callSequence
+          curveOp.callSequence < effectiveSet.callSequence
         )
       ) {
         effectiveSet = {
-          value: curve.data.values[curve.data.values.length - 1],
+          value: curveOp.data.values[curveOp.data.values.length - 1],
           time: currentTime,
-          callSequence: curve.callSequence,
+          callSequence: curveOp.callSequence,
         }
       }
     }
@@ -105,8 +103,8 @@ export class ChromiumAutomationTimeline extends AutomationTimeline {
     // seems to behave like the start time is a set when a curve overlaps with it, but
     // ramps begin as if a set occurred at the beginning of their own call once a target has been
     // set, which makes it behave as if the audio param is fresh with no other sets (target is active)
-    for (const target of this._events.target) {
-      void target
+    for (const targetOp of this._events.target) {
+      void targetOp
     }
   }
 

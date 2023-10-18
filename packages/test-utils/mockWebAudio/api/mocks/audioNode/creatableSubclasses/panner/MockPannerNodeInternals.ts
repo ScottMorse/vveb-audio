@@ -1,10 +1,10 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockPannerNodeInternals
   extends MockAudioNodeInternals
-  implements PannerNode
+  implements OmitEventTarget<PannerNode>
 {
   get channelCount() {
     return this._channelCount
@@ -87,59 +87,77 @@ export class MockPannerNodeInternals
   protected _maxDistance = 10000
 
   protected _orientationX = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 1,
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "Panner.orientationX",
     }
   )
 
   protected _orientationY = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "Panner.orientationY",
     }
   )
 
   protected _orientationZ = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "Panner.orientationZ",
     }
   )
 
   protected _panningModel: PanningModelType = "equalpower"
 
   protected _positionX = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "Panner.positionX",
     }
   )
 
   protected _positionY = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "Panner.positionY",
     }
   )
 
   protected _positionZ = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
+      name: "Panner.positionZ",
     }
   )
 

@@ -1,1 +1,1 @@
-export { MockAudioScheduledSourceNode } from "./MockAudioScheduledSourceNode"
+export { createAudioScheduledSourceNodeMock } from "./MockAudioScheduledSourceNode"

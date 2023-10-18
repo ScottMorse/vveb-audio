@@ -1,10 +1,10 @@
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
 import { MockAudioScheduledSourceNodeInternals } from "../../scheduledSource/MockAudioScheduledSourceNodeInternals"
 
 export class MockAudioBufferSourceNodeInternals
   extends MockAudioScheduledSourceNodeInternals
-  implements AudioBufferSourceNode
+  implements OmitEventTarget<AudioBufferSourceNode>
 {
   get buffer() {
     return this._buffer
@@ -43,10 +43,13 @@ export class MockAudioBufferSourceNodeInternals
   protected _buffer: AudioBuffer | null = null
 
   protected _detune = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 0,
+      name: "AudioBufferSource.detune",
     }
   )
 
@@ -57,13 +60,16 @@ export class MockAudioBufferSourceNodeInternals
   protected _loopStart = 0
 
   protected _playbackRate = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 1,
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
       automationRate: "k-rate",
+      name: "AudioBufferSource.playbackRate",
     }
   )
 

@@ -1,10 +1,10 @@
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockBiquadFilterNodeInternals
   extends MockAudioNodeInternals
-  implements BiquadFilterNode
+  implements OmitEventTarget<BiquadFilterNode>
 {
   get channelCount() {
     return this._channelCount
@@ -37,42 +37,48 @@ export class MockBiquadFilterNodeInternals
   }
 
   protected _detune = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -153600,
       maxValue: 153600,
+      name: "BiquadFilterNode.detune",
     }
   )
 
   protected _frequency = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 350,
       minValue: 0,
       maxValue: 22050,
+      name: "BiquadFilterNode.frequency",
     }
   )
 
   protected _gain = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 1541.273681640625,
+      name: "BiquadFilterNode.gain",
     }
   )
 
-  protected _Q = createMockAudioParam(
-    getEngineContext(this),
-    this.context,
-    {
-      defaultValue: 1,
-      minValue: -3.4028234663852886e38,
-      maxValue: 3.4028234663852886e38,
-    }
-  )
+  protected _Q = createMockAudioParam(this.mockEnvironment.api, this.context, {
+    defaultValue: 1,
+    minValue: -3.4028234663852886e38,
+    maxValue: 3.4028234663852886e38,
+    name: "BiquadFilterNode.Q",
+  })
 
   protected _type: BiquadFilterType = "lowpass"
 

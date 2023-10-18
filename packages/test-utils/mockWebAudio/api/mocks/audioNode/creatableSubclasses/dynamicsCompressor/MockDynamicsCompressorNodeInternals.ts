@@ -1,11 +1,10 @@
-
-import { MockAudioNodeInternals } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNodeInternals"
 import { createMockAudioParam } from "@@test-utils/mockWebAudio/api/mocks/audioParam"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import { MockAudioNodeInternals } from "../../base/MockAudioNodeInternals"
 
 export class MockDynamicsCompressorNodeInternals
   extends MockAudioNodeInternals
-  implements DynamicsCompressorNode
+  implements OmitEventTarget<DynamicsCompressorNode>
 {
   get attack() {
     return this._attack
@@ -40,49 +39,63 @@ export class MockDynamicsCompressorNodeInternals
   }
 
   protected _attack = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 0.003000000026077032,
       automationRate: "k-rate",
+      name: "DynamicsCompressor.attack",
     }
   )
 
   protected _knee = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 30,
       maxValue: 40,
       automationRate: "k-rate",
+      name: "DynamicsCompressor.knee",
     }
   )
 
   protected _ratio = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 12,
       minValue: 1,
       maxValue: 20,
       automationRate: "k-rate",
+      name: "DynamicsCompressor.ratio",
     }
   )
 
   protected _reduction = 0
 
   protected _release = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: 0.25,
       automationRate: "k-rate",
+      name: "DynamicsCompressor.release",
     }
   )
 
   protected _threshold = createMockAudioParam(
-    getEngineContext(this),
+    this.mockEnvironment.api,
     this.context,
+    this.mock,
+    this,
     {
       defaultValue: -24,
       minValue: -100,

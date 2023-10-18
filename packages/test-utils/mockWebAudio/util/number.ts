@@ -1,14 +1,5 @@
-export interface FlipIntOptions {
-  max?: number
-  inclusiveMax?: boolean
-}
+// Many values passed to the Web Audio API are converted to 32-bit integers before being processed.
 
-export const flipInt = (
-  value: number,
-  { max = 0, inclusiveMax = false } = <FlipIntOptions>{}
-) =>
-  typeof value === "number" && !isFinite(value)
-    ? 0
-    : Number(
-        (inclusiveMax ? value <= max : value < max) ? 4294967296 + value : value
-      )
+export const convertSigned32Int = (value: number) => Number(value) << 0
+
+export const convertUnsigned32Int = (value: number) => Number(value) >>> 0

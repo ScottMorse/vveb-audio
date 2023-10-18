@@ -1,37 +1,91 @@
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { MockEnvironment } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { formatSampleRate } from "@@test-utils/mockWebAudio/util/deviceSettings"
 import { sanitizeEventCallback } from "@@test-utils/mockWebAudio/util/events"
-import { flipInt } from "@@test-utils/mockWebAudio/util/number"
+import {
+  convertSigned32Int,
+  convertUnsigned32Int,
+} from "@@test-utils/mockWebAudio/util/number"
 import { MockBaseAudioContextInternals } from "../base/MockBaseAudioContextInternals"
 
 export class MockOfflineAudioContextInternals
   extends MockBaseAudioContextInternals<OfflineAudioContext>
-  implements OfflineAudioContext
+  implements
+    Omit<OfflineAudioContext, keyof EventTarget | "listener" | "destination">
 {
   /* eslint-disable lines-between-class-members */
-  constructor(options: OfflineAudioContextOptions)
-  constructor(numberOfChannels: number, length: number, sampleRate: number)
   constructor(
+    mock: OfflineAudioContext,
+    mockEnvironment: MockEnvironment,
+    options: OfflineAudioContextOptions
+  )
+  constructor(
+    mock: OfflineAudioContext,
+    mockEnvironment: MockEnvironment,
+    numberOfChannels: number,
+    length: number,
+    sampleRate: number,
+    argumentsLength?: number
+  )
+  constructor(
+    mock: OfflineAudioContext,
+    mockEnvironment: MockEnvironment,
     arg1: number | OfflineAudioContextOptions,
     length?: number,
-    sampleRate?: number
+    sampleRate?: number,
+    argumentsLength?: number
   ) {
-    super()
+    super(mock, mockEnvironment)
 
     // mimics native behavior
     const sanitizeNumber = (value: any) =>
-      typeof value === "number" && isFinite(value) ? flipInt(value) : 0
+      typeof value === "number" && isFinite(value)
+        ? convertSigned32Int(value)
+        : 0
 
-    const isOptionsArg = typeof arg1 === "object"
+    if (argumentsLength === 1) {
+      if (!arg1 || typeof arg1 !== "object") {
+        throw new TypeError(
+          "Failed to construct 'OfflineAudioContext': The provided value is not of type 'OfflineAudioContextOptions'."
+        )
+      }
+    }
 
-    const numberOfChannels = sanitizeNumber(
-      isOptionsArg ? arg1.numberOfChannels ?? 1 : arg1
+    if (argumentsLength === 2) {
+      throw new TypeError(
+        "Failed to construct 'OfflineAudioContext': Overload resolution failed."
+      )
+    }
+
+    const _isOptionsArg = (arg: unknown): arg is OfflineAudioContextOptions =>
+      argumentsLength === 1
+
+    const isOptionsArg = _isOptionsArg(arg1)
+
+    if (isOptionsArg) {
+      for (const key of ["length", "numberOfChannels", "sampleRate"] as const) {
+        if (arg1?.[key] === undefined) {
+          throw new TypeError(
+            `Failed to construct 'OfflineAudioContext': Failed to read the '${key}' property from 'OfflineAudioContextOptions': Required member is undefined.`
+          )
+        }
+      }
+    }
+
+    const numberOfChannels = convertUnsigned32Int(
+      sanitizeNumber(isOptionsArg ? arg1.numberOfChannels ?? 1 : arg1)
     )
-    length = sanitizeNumber(isOptionsArg ? arg1.length : length)
+    length = convertUnsigned32Int(
+      sanitizeNumber(isOptionsArg ? arg1.length : length)
+    )
     sampleRate = Number(isOptionsArg ? arg1.sampleRate : sampleRate)
 
     if (!isFinite(sampleRate)) {
       throw new TypeError(
-        `Failed to construct 'OfflineAudioContext': The provided float value is non-finite.`
+        `Failed to construct 'OfflineAudioContext':${
+          isOptionsArg
+            ? " Failed to read the 'sampleRate' property from 'OfflineAudioContextOptions':"
+            : ""
+        } The provided float value is non-finite.`
       )
     }
 
@@ -42,21 +96,22 @@ export class MockOfflineAudioContextInternals
       )
     }
 
-    const { maxChannels } = getEngineContext(this).deviceSettings
+    const { audioBufferMaxChannelCount } = this.mockEnvironment.deviceSettings
 
-    if (numberOfChannels < 1 || numberOfChannels > maxChannels) {
+    if (numberOfChannels < 1 || numberOfChannels > audioBufferMaxChannelCount) {
       throw new DOMException(
-        `Failed to construct 'OfflineAudioContext': The number of channels provided (${numberOfChannels}) is outside the range [1, ${maxChannels}].`,
+        `Failed to construct 'OfflineAudioContext': The number of channels provided (${numberOfChannels}) is outside the range [1, ${audioBufferMaxChannelCount}].`,
         "NotSupportedError"
       )
     }
 
-    const { minSampleRate, maxSampleRate } =
-      getEngineContext(this).deviceSettings
+    const { minSampleRate, maxSampleRate } = this.mockEnvironment.deviceSettings
 
     if (sampleRate < minSampleRate || sampleRate > maxSampleRate) {
       throw new DOMException(
-        `Failed to construct 'OfflineAudioContext': The sampleRate provided (${sampleRate}) is outside the range [${minSampleRate}, ${maxSampleRate}].`,
+        `Failed to construct 'OfflineAudioContext': The sampleRate provided (${formatSampleRate(
+          sampleRate
+        )}) is outside the range [${minSampleRate}, ${maxSampleRate}].`,
         "NotSupportedError"
       )
     }
@@ -132,22 +187,20 @@ export class MockOfflineAudioContextInternals
 
     this._changeState("closed")
 
-    const renderedBuffer = new (getEngineContext(this).mockApi.AudioBuffer)({
+    const renderedBuffer = new this.mockEnvironment.api.AudioBuffer({
       length: this._length,
       numberOfChannels: this._numberOfChannels,
       sampleRate: this._sampleRate,
     })
 
-    const event = new (getEngineContext(
-      this
-    ).mockApi.OfflineAudioCompletionEvent)(
+    const event = new this.mockEnvironment.api.OfflineAudioCompletionEvent(
       "complete",
       { renderedBuffer },
-      this.mock
+      ...([this.mock] as unknown as [])
     )
 
     this.oncomplete?.(event)
-    this.dispatchEvent(event)
+    this.mock.dispatchEvent(event)
 
     return renderedBuffer
   }

@@ -7,5 +7,5 @@
       "@@test-utils/*": ["../../packages/test-utils/*"]
     }
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

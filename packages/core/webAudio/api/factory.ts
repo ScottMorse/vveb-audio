@@ -49,7 +49,7 @@ type WebAudioInstances<W extends WebAudioImplName> = {
     K,
     W
   > extends ConcreteConstructor
-    ? nstanceType<WebAudioMember<K, W>>
+    ? InstanceType<WebAudioMember<K, W>>
     : never
 }
 
@@ -68,7 +68,7 @@ type WebAudioInstances<W extends WebAudioImplName> = {
 export type WebAudioInstance<
   M extends keyof WebAudioInstances<W>,
   W extends WebAudioImplName = WebAudioImplName
-> = Omit<NonNullable<WebAudioInstances<W>[M]>, 'createScriptProcessor'>
+> = Omit<NonNullable<WebAudioInstances<W>[M]>, "createScriptProcessor">
 
 const validateWebAudioName = (name: WebAudioImplName) => {
   if (!CONFIG[name]) {

@@ -1,147 +1,135 @@
-import { BaseMock, getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
 import {
-  EngineContext,
-  getEngineContext,
-} from "@@test-utils/mockWebAudio/engine/engineContext"
+  createMockFactory,
+  MockWebAudioApi,
+} from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
 import {
-  MediaStreamTrackOptions,
   MockMediaStreamTrackInternals,
+  MediaStreamTrackOptions,
 } from "./MockMediaStreamTrackInternals"
 
-const ALLOW_MEDIA_STREAM_TRACK_CONSTRUCTOR = Symbol("ALLOW_CONSTRUCTOR")
+const ALLOW_CONSTRUCTOR = Symbol("ALLOW_CONSTRUCTOR")
 
-export class MockMediaStreamTrack
-  extends BaseMock<MockMediaStreamTrackInternals>
-  implements MediaStreamTrack
-{
-  constructor(
-    options?: MediaStreamTrackOptions,
-    _allow?: typeof ALLOW_MEDIA_STREAM_TRACK_CONSTRUCTOR
-  ) {
-    super(new MockMediaStreamTrackInternals())
-    if (_allow !== ALLOW_MEDIA_STREAM_TRACK_CONSTRUCTOR) {
-      throw new TypeError("Illegal constructor")
+export const createMediaStreamTrackMock = createMockFactory<
+  typeof MediaStreamTrack,
+  MockMediaStreamTrackInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("MediaStreamTrack")
+  class MockMediaStreamTrack extends EventTarget implements MediaStreamTrack {
+    constructor(
+      options?: MediaStreamTrackOptions,
+      allow?: typeof ALLOW_CONSTRUCTOR
+    ) {
+      if (allow !== ALLOW_CONSTRUCTOR) {
+        throw new TypeError("Illegal constructor")
+      }
+
+      super()
+      setInternals(
+        this,
+        new MockMediaStreamTrackInternals(this, mockEnvironment, options)
+      )
+    }
+
+    applyConstraints(
+      constraints?: MediaTrackConstraints | undefined
+    ): Promise<void> {
+      return getInternals(this).applyConstraints(constraints)
+    }
+
+    clone(): MediaStreamTrack {
+      return new mockEnvironment.api.MediaStreamTrack(
+        ...([
+          {
+            kind: this.kind,
+            label: this.label,
+            muted: this.muted,
+            readyState: this.readyState,
+            constraints: this.getConstraints(),
+            contentHint: this.contentHint,
+          },
+        ] as unknown as [])
+      )
+    }
+
+    get contentHint(): string {
+      return getInternals(this).contentHint
+    }
+
+    get enabled(): boolean {
+      return getInternals(this).enabled
+    }
+
+    set enabled(value) {
+      getInternals(this).enabled = value
+    }
+
+    getCapabilities() {
+      return getInternals(this).getCapabilities()
+    }
+
+    getConstraints() {
+      return getInternals(this).getConstraints()
+    }
+
+    getSettings() {
+      return getInternals(this).getSettings()
+    }
+
+    get id(): string {
+      return getInternals(this).id
+    }
+
+    get kind(): string {
+      return getInternals(this).kind
+    }
+
+    get label(): string {
+      return getInternals(this).label
+    }
+
+    get muted(): boolean {
+      return getInternals(this).muted
+    }
+
+    get onended(): ((this: MediaStreamTrack, ev: Event) => any) | null {
+      return getInternals(this).onended
+    }
+
+    set onended(value) {
+      getInternals(this).onended = value
+    }
+
+    get onmute(): ((this: MediaStreamTrack, ev: Event) => any) | null {
+      return getInternals(this).onmute
+    }
+
+    set onmute(value) {
+      getInternals(this).onmute = value
+    }
+
+    get onunmute(): ((this: MediaStreamTrack, ev: Event) => any) | null {
+      return getInternals(this).onunmute
+    }
+
+    set onunmute(value) {
+      getInternals(this).onunmute = value
+    }
+
+    get readyState(): MediaStreamTrackState {
+      return getInternals(this).readyState
+    }
+
+    stop() {
+      return getInternals(this).stop()
     }
   }
 
-  addEventListener<K extends keyof MediaStreamTrackEventMap>(
-    type: K,
-    listener: (this: MediaStreamTrack, ev: MediaStreamTrackEventMap[K]) => any,
-    options?: boolean | AddEventListenerOptions | undefined
-  ) {
-    return getInternals(this).addEventListener(type, listener, options)
-  }
-
-  applyConstraints(
-    constraints?: MediaTrackConstraints | undefined
-  ): Promise<void> {
-    return getInternals(this).applyConstraints(constraints)
-  }
-
-  clone() {
-    return new (getEngineContext(this).mockApi.MediaStreamTrack)(
-      {
-        kind: this.kind as MediaStreamTrackOptions["kind"],
-        label: this.label,
-        muted: this.muted,
-        readyState: this.readyState,
-        constraints: this.getConstraints(),
-        contentHint: this.contentHint as MediaStreamTrackOptions["contentHint"],
-      },
-      ALLOW_MEDIA_STREAM_TRACK_CONSTRUCTOR
-    )
-  }
-
-  get contentHint() {
-    return getInternals(this).contentHint
-  }
-
-  dispatchEvent(event: Event) {
-    return getInternals(this).dispatchEvent(event)
-  }
-
-  get enabled() {
-    return getInternals(this).enabled
-  }
-
-  set enabled(value) {
-    getInternals(this).enabled = value
-  }
-
-  getCapabilities() {
-    return getInternals(this).getCapabilities()
-  }
-
-  getConstraints() {
-    return getInternals(this).getConstraints()
-  }
-
-  getSettings() {
-    return getInternals(this).getSettings()
-  }
-
-  get id() {
-    return getInternals(this).id
-  }
-
-  get kind() {
-    return getInternals(this).kind
-  }
-
-  get label() {
-    return getInternals(this).label
-  }
-
-  get muted() {
-    return getInternals(this).muted
-  }
-
-  get onended() {
-    return getInternals(this).onended
-  }
-
-  set onended(value) {
-    getInternals(this).onended = value
-  }
-
-  get onmute() {
-    return getInternals(this).onmute
-  }
-
-  set onmute(value) {
-    getInternals(this).onmute = value
-  }
-
-  get onunmute() {
-    return getInternals(this).onunmute
-  }
-
-  set onunmute(value) {
-    getInternals(this).onunmute = value
-  }
-
-  get readyState() {
-    return getInternals(this).readyState
-  }
-
-  removeEventListener<K extends keyof MediaStreamTrackEventMap>(
-    type: K,
-    listener: (this: MediaStreamTrack, ev: MediaStreamTrackEventMap[K]) => any,
-    options?: boolean | EventListenerOptions | undefined
-  ) {
-    return getInternals(this).removeEventListener(type, listener, options)
-  }
-
-  stop() {
-    return getInternals(this).stop()
-  }
-}
+  return MockMediaStreamTrack
+})
 
 export const createMockMediaStreamTrack = (
-  engineContext: EngineContext,
+  api: MockWebAudioApi,
   options?: MediaStreamTrackOptions
 ) =>
-  new engineContext.mockApi.MediaStreamTrack(
-    options,
-    ALLOW_MEDIA_STREAM_TRACK_CONSTRUCTOR
-  )
+  new api.MediaStreamTrack(...([options, ALLOW_CONSTRUCTOR] as unknown as []))

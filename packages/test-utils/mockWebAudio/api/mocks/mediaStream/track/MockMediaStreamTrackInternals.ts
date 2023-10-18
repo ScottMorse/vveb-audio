@@ -1,5 +1,7 @@
-import { MockInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import {
+  MockEnvironment,
+  MockInternals,
+} from "@@test-utils/mockWebAudio/api/mockFactory"
 import { sanitizeEventCallback } from "@@test-utils/mockWebAudio/util/events"
 import { createStreamId } from "@@test-utils/mockWebAudio/util/mediaStream"
 import { customAlphabet } from "nanoid"
@@ -22,12 +24,16 @@ export interface MediaStreamTrackOptions {
 
 export class MockMediaStreamTrackInternals
   extends MockInternals<MediaStreamTrack>
-  implements Omit<MediaStreamTrack, "clone">
+  implements Omit<MediaStreamTrack, "clone" | keyof EventTarget>
 {
   readonly eventTarget = new EventTarget()
 
-  constructor(options?: MediaStreamTrackOptions) {
-    super()
+  constructor(
+    mock: MediaStreamTrack,
+    mockEnvironment: MockEnvironment,
+    options?: MediaStreamTrackOptions
+  ) {
+    super(mock, mockEnvironment)
 
     this._kind = options?.kind ?? "audio"
     this._label = options?.label ?? "Default"
@@ -41,51 +47,18 @@ export class MockMediaStreamTrackInternals
     }
   }
 
-  addEventListener<K extends keyof MediaStreamTrackEventMap>(
-    type: K,
-    listener: (this: MediaStreamTrack, ev: MediaStreamTrackEventMap[K]) => any,
-    options?: boolean | AddEventListenerOptions | undefined
-  ): void
-
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions | undefined
-  ): void
-
-  addEventListener(
-    type: unknown,
-    listener: unknown,
-    options?: AddEventListenerOptions
-  ) {
-    return this.eventTarget.addEventListener(
-      type as any,
-      listener as any,
-      options
-    )
-  }
-
   async applyConstraints(constraints?: MediaTrackConstraints) {
     if (!["undefined", "object", "function"].includes(typeof constraints)) {
       throw new TypeError(
         "'Failed to execute 'applyConstraints' on 'MediaStreamTrack': The provided value is not of type 'MediaTrackConstraints'."
       )
     }
-    this._constraints.latency
     this._constraints =
       typeof constraints === "function" ? {} : constraints ?? {}
   }
 
   get contentHint() {
     return this._contentHint
-  }
-
-  dispatchEvent(event: Event): boolean
-
-  dispatchEvent(event: Event): boolean
-
-  dispatchEvent(event: unknown): boolean {
-    return this.eventTarget.dispatchEvent(event as any)
   }
 
   get enabled() {
@@ -98,7 +71,7 @@ export class MockMediaStreamTrackInternals
 
   getCapabilities(): MediaTrackCapabilities {
     return {
-      ...getEngineContext(this).deviceSettings.mediaTrackCapabilities,
+      ...this.mockEnvironment.deviceSettings.mediaTrackCapabilities,
       deviceId: this._deviceId,
     }
   }
@@ -111,7 +84,7 @@ export class MockMediaStreamTrackInternals
 
   getSettings(): MediaTrackSettings {
     return {
-      ...getEngineContext(this).deviceSettings.mediaTrackSettings,
+      ...this.mockEnvironment.deviceSettings.mediaTrackSettings,
       deviceId: this._deviceId,
     }
   }
@@ -160,18 +133,14 @@ export class MockMediaStreamTrackInternals
     return this._readyState
   }
 
-  removeEventListener<K extends keyof MediaStreamTrackEventMap>(
-    type: K,
-    listener: (this: MediaStreamTrack, ev: MediaStreamTrackEventMap[K]) => any,
-    options?: boolean | EventListenerOptions | undefined
-  ) {
-    return this.eventTarget.removeEventListener(type, listener, options)
-  }
-
   stop() {
     this._readyState = "ended"
     this._stopped = true
-    this.eventTarget.dispatchEvent(new Event("ended"))
+    this.eventTarget.dispatchEvent(
+      new this.mockEnvironment.api.MediaStreamTrackEvent("ended", {
+        track: this.mock,
+      })
+    )
   }
 
   protected _enabled = true

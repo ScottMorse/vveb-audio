@@ -1,56 +1,48 @@
-import { MockInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
-import { MockBaseAudioContext } from "../../audioContext/base/MockBaseAudioContext"
+import {
+  MockEnvironment,
+  MockInternals,
+} from "@@test-utils/mockWebAudio/api/mockFactory"
+import { isInstanceType } from "@@test-utils/mockWebAudio/util/instanceType"
+import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
 
 export class MockAudioNodeInternals
   extends MockInternals<AudioNode>
-  implements AudioNode
+  implements OmitEventTarget<AudioNode>
 {
   protected eventTarget = new EventTarget()
 
-  constructor(context: BaseAudioContext, options?: any) {
-    super()
+  constructor(
+    mock: AudioNode,
+    mockEnvironment: MockEnvironment,
+    context: BaseAudioContext,
+    _options?: AudioNodeOptions
+  ) {
+    super(mock, mockEnvironment)
+
     if (!context) {
       throw new TypeError(
         `Failed to construct '${this.constructor.name}': 1 argument required, but only 0 present.`
       )
     }
-    if (!(context instanceof MockBaseAudioContext)) {
+    if (!isInstanceType(context, "BaseAudioContext", mockEnvironment.api)) {
       throw new TypeError(
         `Failed to construct '${this.constructor.name}': parameter 1 is not of type 'BaseAudioContext'.`
       )
     }
-    this._context = context as unknown as BaseAudioContext
-
-    if (options) {
-      /** @todo review how options are set */
-      for (const [key, value] of Object.entries(options)) {
-        ;(this as any)[key] = value
-      }
-    }
-  }
-
-  addEventListener(
-    type: string,
-    callback: EventListenerOrEventListenerObject | null,
-    options?: boolean | AddEventListenerOptions | undefined
-  ) {
-    return this.eventTarget.addEventListener(type, callback, options)
+    this._context = context
   }
 
   get channelCount() {
     return this._channelCount
   }
 
-  set channelCount(value) {
+  set channelCount(value: number) {
     if (
       value < 1 ||
-      value > getEngineContext(this).deviceSettings.maxChannels
+      value > this.mockEnvironment.deviceSettings.destinationMaxChannelCount
     ) {
       throw new TypeError(
-        `Failed to set the 'channelCount' property on 'AudioNode': The provided value (${value}) is outside the range [1, ${
-          getEngineContext(this).deviceSettings.maxChannels
-        }].`
+        `Failed to set the 'channelCount' property on 'AudioNode': The provided value (${value}) is outside the range [1, ${this.mockEnvironment.deviceSettings.destinationMaxChannelCount}].`
       )
     }
     this._channelCount = parseInt(Number(value) as unknown as string)
@@ -73,6 +65,15 @@ export class MockAudioNodeInternals
     return this._channelInterpretation
   }
 
+  set channelInterpretation(value) {
+    if (!["speakers", "discrete"].includes(value as string)) {
+      throw new TypeError(
+        `Failed to set the 'channelInterpretation' property on 'AudioNode': The provided value (${value}) is not one of 'speakers' or 'discrete'.`
+      )
+    }
+    this._channelInterpretation = value
+  }
+
   connect(
     destinationNode: AudioNode,
     output?: number,
@@ -85,7 +86,9 @@ export class MockAudioNodeInternals
     destination: AudioNode | AudioParam,
     output?: number,
     input?: number
-  ) {
+  ): AudioNode | void {
+    /** @todo NOTE confirm and implement that destination must have numberOfOutputs > 0 */
+
     if (
       typeof output === "number" &&
       (output > this.numberOfOutputs - 1 || output < 0)
@@ -102,7 +105,7 @@ export class MockAudioNodeInternals
         `Uncaught DOMException: Failed to execute 'connect' on 'AudioNode': input index (${output}) exceeds number of input (${this.numberOfInputs}).`
       )
     }
-    if (destination instanceof getEngineContext(this).mockApi.AudioNode) {
+    if (isInstanceType(destination, "AudioNode", this.mockEnvironment.api)) {
       return destination
     }
   }
@@ -129,24 +132,12 @@ export class MockAudioNodeInternals
     _input?: number
   ) {}
 
-  dispatchEvent(event: Event) {
-    return this.eventTarget.dispatchEvent(event)
-  }
-
   get numberOfInputs() {
     return 1
   }
 
   get numberOfOutputs() {
     return 1
-  }
-
-  removeEventListener(
-    type: string,
-    callback: EventListenerOrEventListenerObject | null,
-    options?: boolean | EventListenerOptions | undefined
-  ) {
-    return this.eventTarget.removeEventListener(type, callback, options)
   }
 
   protected _channelCountMode: ChannelCountMode = "max"

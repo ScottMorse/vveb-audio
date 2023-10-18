@@ -1,16 +1,30 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockStereoPannerNodeInternals } from "./MockStereoPannerNodeInternals"
 
-export class MockStereoPannerNode
-  extends MockAudioNode<MockStereoPannerNodeInternals>
-  implements StereoPannerNode
-{
-  constructor(context: BaseAudioContext, options?: StereoPannerOptions) {
-    super(context, options, new MockStereoPannerNodeInternals(context, options))
+export const createStereoPannerNodeMock = createMockFactory<
+  typeof StereoPannerNode,
+  MockStereoPannerNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("StereoPannerNode")
+  class MockStereoPannerNode
+    extends mockEnvironment.api.AudioNode
+    implements StereoPannerNode
+  {
+    constructor(context: BaseAudioContext, options?: StereoPannerOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockStereoPannerNodeInternals(this, mockEnvironment, context)
+      )
+    }
+
+    get pan(): AudioParam {
+      return getInternals(this).pan
+    }
   }
 
-  get pan() {
-    return getInternals(this).pan
-  }
-}
+  return MockStereoPannerNode
+})

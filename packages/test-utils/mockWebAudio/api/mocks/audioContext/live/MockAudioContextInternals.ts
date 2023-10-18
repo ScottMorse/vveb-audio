@@ -1,5 +1,6 @@
 import { delay } from "@@core/internal/testing/delay"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import { MockEnvironment } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { formatSampleRate } from "@@test-utils/mockWebAudio/util/deviceSettings"
 import { MockBaseAudioContextInternals } from "../base/MockBaseAudioContextInternals"
 
 const throwStateDomException = (method: "resume" | "suspend" | "close") => {
@@ -28,11 +29,16 @@ const fireStateChangeEvent = (context: BaseAudioContext) => {
 }
 
 export class MockAudioContextInternals
-  extends MockBaseAudioContextInternals
-  implements AudioContext
+  extends MockBaseAudioContextInternals<AudioContext>
+  implements Omit<AudioContext, keyof EventTarget | "destination" | "listener">
 {
-  constructor(options?: AudioContextOptions) {
-    super()
+  constructor(
+    mock: AudioContext,
+    mockEnvironment: MockEnvironment,
+    options?: AudioContextOptions
+  ) {
+    super(mock, mockEnvironment)
+
     this._sampleRate = Number(
       options?.sampleRate === undefined ? 44_100 : options?.sampleRate
     )
@@ -41,17 +47,15 @@ export class MockAudioContextInternals
     if (options?.latencyHint !== undefined)
       validateLatencyHint(options?.latencyHint)
 
-    if (this.constructor.name !== "OfflineAudioContext") {
-      this._keepLiveTime()
-    }
+    this._keepLiveTime()
 
     this._state =
       "running" /** @todo configure whether context can start? Or mimic browser behavior? */
-    fireStateChangeEvent(this) // this should only happen if the context's initial state is running
+    fireStateChangeEvent(this.mock) // this should only happen if the context's initial state is running
   }
 
   get baseLatency() {
-    return 0.01
+    return this.mockEnvironment.deviceSettings.audioContextBaseLatency
   }
 
   async close() {
@@ -59,35 +63,38 @@ export class MockAudioContextInternals
 
     this._state = "closed"
     this._stopKeepingLiveTime()
-    fireStateChangeEvent(this)
+    fireStateChangeEvent(this.mock)
   }
 
   createMediaElementSource(
     mediaElement: HTMLMediaElement
   ): MediaElementAudioSourceNode {
-    return new (getEngineContext(this).mockApi.MediaElementAudioSourceNode)(
-      this,
-      {
-        mediaElement,
-      }
-    )
+    /**
+     * @todo When a mock uses the mock API to create instances in the internals,
+     * perhaps care should be taken as to whether the user disabled
+     * the mock from being used globally. Perhaps if the mock API is currently
+     * set to globalThis and certain classes were excluded, attempt to
+     * resolve either the globalThis class or the mock class for excluded
+     * classes, warning and falling back to the mock class if the globalThis
+     * class does not exist. (also @todo, use configurable logger for library logs like this)
+     */
+    return new this.mockEnvironment.api.MediaElementAudioSourceNode(this.mock, {
+      mediaElement,
+    })
   }
 
   createMediaStreamDestination(): MediaStreamAudioDestinationNode {
-    return new (getEngineContext(this).mockApi.MediaStreamAudioDestinationNode)(
-      this
+    return new this.mockEnvironment.api.MediaStreamAudioDestinationNode(
+      this.mock
     )
   }
 
   createMediaStreamSource(
     mediaStream: MediaStream
   ): MediaStreamAudioSourceNode {
-    return new (getEngineContext(this).mockApi.MediaStreamAudioSourceNode)(
-      this,
-      {
-        mediaStream,
-      }
-    )
+    return new this.mockEnvironment.api.MediaStreamAudioSourceNode(this.mock, {
+      mediaStream,
+    })
   }
 
   getOutputTimestamp(): AudioTimestamp {
@@ -98,7 +105,7 @@ export class MockAudioContextInternals
   }
 
   get outputLatency() {
-    return 0.05
+    return this.mockEnvironment.deviceSettings.audioContextOutputLatency
   }
 
   async resume() {
@@ -108,7 +115,7 @@ export class MockAudioContextInternals
 
     this._state = "running"
     this._keepLiveTime()
-    fireStateChangeEvent(this)
+    fireStateChangeEvent(this.mock)
   }
 
   async suspend() {
@@ -117,7 +124,7 @@ export class MockAudioContextInternals
 
     this._state = "suspended"
     this._stopKeepingLiveTime()
-    fireStateChangeEvent(this)
+    fireStateChangeEvent(this.mock)
   }
 
   protected validateSampleRate(sampleRate: number) {
@@ -127,12 +134,13 @@ export class MockAudioContextInternals
       )
     }
 
-    const { minSampleRate, maxSampleRate } =
-      getEngineContext(this).deviceSettings
+    const { minSampleRate, maxSampleRate } = this.mockEnvironment.deviceSettings
 
     if (sampleRate < minSampleRate || sampleRate > maxSampleRate) {
       throw new DOMException(
-        `Failed to construct 'AudioContext': The hardware sample rate provided (${sampleRate}) is outside the range [${minSampleRate}, ${maxSampleRate}].`,
+        `Failed to construct 'AudioContext': The hardware sample rate provided (${formatSampleRate(
+          sampleRate
+        )}) is outside the range [${minSampleRate}, ${maxSampleRate}].`,
         "NotSupportedError"
       )
     }
@@ -147,7 +155,7 @@ export class MockAudioContextInternals
       this._currentPerformanceTime = performance.now()
       this._onCurrentTimeChanged()
     }
-    this._keepTimeInterval = setInterval(callback, 0)
+    this._keepTimeInterval = setInterval(callback, 10)
   }
 
   protected _stopKeepingLiveTime() {

@@ -1,20 +1,27 @@
-import { MockInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { getEngineContext } from "@@test-utils/mockWebAudio/engine/engineContext"
+import {
+  MockEnvironment,
+  MockInternals,
+} from "@@test-utils/mockWebAudio/api/mockFactory"
 import { sanitizeEventCallback } from "@@test-utils/mockWebAudio/util/events"
+import { isInstanceType } from "@@test-utils/mockWebAudio/util/instanceType"
 import { createStreamId } from "@@test-utils/mockWebAudio/util/mediaStream"
 
 export class MockMediaStreamInternals
   extends MockInternals<MediaStream>
-  implements MediaStream
+  implements Omit<MediaStream, keyof EventTarget>
 {
   readonly eventTarget = new EventTarget()
 
-  constructor(streamOrTracks?: MediaStream | MediaStreamTrack[]) {
-    super()
+  constructor(
+    mock: MediaStream,
+    mockEnvironment: MockEnvironment,
+    streamOrTracks?: MediaStream | MediaStreamTrack[]
+  ) {
+    super(mock, mockEnvironment)
 
     if (Array.isArray(streamOrTracks)) {
       for (const track of streamOrTracks) {
-        if (!(track instanceof MediaStreamTrack)) {
+        if (!isInstanceType(track, "MediaStreamTrack", mockEnvironment.api)) {
           throw new TypeError(
             "Failed to construct 'MediaStream': Failed to convert value to 'MediaStreamTrack'."
           )
@@ -22,42 +29,28 @@ export class MockMediaStreamInternals
       }
     } else if (
       streamOrTracks !== undefined &&
-      !(streamOrTracks instanceof MediaStream)
+      !isInstanceType(streamOrTracks, "MediaStream", mockEnvironment.api)
     ) {
       throw new TypeError(
         "Failed to construct 'MediaStream': Overload resolution failed."
       )
     }
 
-    if (streamOrTracks instanceof MediaStream) {
+    if (isInstanceType(streamOrTracks, "MediaStream", mockEnvironment.api)) {
       this._tracks = [...streamOrTracks.getTracks()]
     } else if (Array.isArray(streamOrTracks)) {
       this._tracks = [...streamOrTracks]
+
+      /**
+       * @todo review: is this always the case?
+       * Seen in Chrome when constructing MediaStream from AudioContext stream destination node's stream tracks
+       */
+      this._active = true
     }
   }
 
   get active() {
     return this._active
-  }
-
-  addEventListener<K extends keyof MediaStreamEventMap>(
-    type: K,
-    listener: (this: MediaStream, ev: MediaStreamEventMap[K]) => any,
-    options?: boolean | AddEventListenerOptions | undefined
-  ): void
-
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions | undefined
-  ): void
-
-  addEventListener(type: unknown, listener: unknown, options?: unknown): void {
-    this.eventTarget.addEventListener(
-      type as any,
-      listener as any,
-      options as any
-    )
   }
 
   addTrack(track: MediaStreamTrack): void {
@@ -66,13 +59,9 @@ export class MockMediaStreamInternals
   }
 
   clone(): MediaStream {
-    const clonedStream = new (getEngineContext(this).mockApi.MediaStream)(this)
+    const clonedStream = new this.mockEnvironment.api.MediaStream(this.mock)
     this._tracks.forEach((track) => clonedStream.addTrack(track.clone() as any))
     return clonedStream as any
-  }
-
-  dispatchEvent(event: Event) {
-    return this.eventTarget.dispatchEvent(event)
   }
 
   getAudioTracks(): MediaStreamTrack[] {
@@ -125,30 +114,6 @@ export class MockMediaStreamInternals
 
   set onremovetrack(callback) {
     this._onremovetrack = sanitizeEventCallback(callback)
-  }
-
-  removeEventListener<K extends keyof MediaStreamEventMap>(
-    type: K,
-    listener: (this: MediaStream, ev: MediaStreamEventMap[K]) => any,
-    options?: boolean | EventListenerOptions | undefined
-  ): void
-
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions | undefined
-  ): void
-
-  removeEventListener(
-    type: unknown,
-    listener: unknown,
-    options?: unknown
-  ): void {
-    this.eventTarget.removeEventListener(
-      type as any,
-      listener as any,
-      options as any
-    )
   }
 
   removeTrack(track: MediaStreamTrack): void {

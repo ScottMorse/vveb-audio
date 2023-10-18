@@ -1,9 +1,34 @@
-import { getInternals } from "@@test-utils/mockWebAudio/api/baseMock"
-import { MockAudioNode } from "@@test-utils/mockWebAudio/api/mocks/audioNode/base/MockAudioNode"
+import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
+import { MockAudioNodeArgs } from "../../base"
 import { MockMediaStreamAudioDestinationNodeInternals } from "./MockMediaStreamAudioDestinationNodeInternals"
 
-export class MockMediaStreamAudioDestinationNode extends MockAudioNode<MockMediaStreamAudioDestinationNodeInternals> implements MediaStreamAudioDestinationNode {
-  get stream() {
-    return getInternals(this).stream
+export const createMediaStreamAudioDestinationNodeMock = createMockFactory<
+  typeof MediaStreamAudioDestinationNode,
+  MockMediaStreamAudioDestinationNodeInternals
+>(({ setInternals, getInternals, mockEnvironment }) => {
+  @MockConstructorName("MediaStreamAudioDestinationNode")
+  class MockMediaStreamAudioDestinationNode
+    extends mockEnvironment.api.AudioNode
+    implements MediaStreamAudioDestinationNode
+  {
+    constructor(context: BaseAudioContext, options?: AudioNodeOptions) {
+      const args: MockAudioNodeArgs = [context, options]
+      super(...(args as unknown as []))
+      setInternals(
+        this,
+        new MockMediaStreamAudioDestinationNodeInternals(
+          this,
+          mockEnvironment,
+          context
+        )
+      )
+    }
+
+    get stream(): MediaStream {
+      return getInternals(this).stream
+    }
   }
-}
+
+  return MockMediaStreamAudioDestinationNode
+})
