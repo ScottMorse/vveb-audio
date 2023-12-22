@@ -151,9 +151,10 @@ export const OFFLINE_AUDIO_CONTEXT_TEST_GROUP: TestGroupConfig = {
               args: [{ length: 24, numberOfChannels: 15, sampleRate: 48000 }],
               name: "new OfflineAudioContext({ length: 24, numberOfChannels: 15, sampleRate: 48000 })",
             },
-            ...createCommonNumberTestArgs<
-              [number, number, number] | [OfflineAudioContextOptions]
-            >((x) => {
+            ...createCommonNumberTestArgs<{
+              args: [number, number, number] | [OfflineAudioContextOptions]
+              name: string
+            }>((x) => {
               const baseArgs = [
                 {
                   args: [x, 10, 44100],

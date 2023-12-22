@@ -19,6 +19,7 @@ export class MockConstantSourceNodeInternals
       this._offset = createMockAudioParam(
         this.mockEnvironment.api,
         this.context,
+        this.mock,
         {
           value: options.offset,
           defaultValue: 1,
@@ -44,7 +45,6 @@ export class MockConstantSourceNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 1,
       minValue: -3.4028234663852886e38,

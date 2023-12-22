@@ -1,17 +1,10 @@
 import { createMockFactory } from "@@test-utils/mockWebAudio/api/mockFactory"
+import { ValidateMethodArgsLength } from "@@test-utils/mockWebAudio/util/arguments"
 import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
-import { AudioGraphNode } from "../../audioContext/base/audioGraph"
+import { registerGraphNode } from "../../audioContext/base/audioGraph"
 import { MockAudioNodeInternals } from "./MockAudioNodeInternals"
 
 export type MockAudioNodeArgs = [BaseAudioContext, AudioNodeOptions?]
-
-const AUDIO_GRAPH_MAP = new WeakMap<
-  AudioNode,
-  {
-    graphNode: AudioGraphNode
-    context: BaseAudioContext
-  }
->()
 
 export const createAudioNodeMock = createMockFactory<
   typeof AudioNode,
@@ -34,10 +27,7 @@ export const createAudioNodeMock = createMockFactory<
         new MockAudioNodeInternals(this, mockEnvironment, context, options)
       )
 
-      AUDIO_GRAPH_MAP.set(this, {
-        graphNode: new AudioGraphNode(this),
-        context,
-      })
+      registerGraphNode(this, context, mockEnvironment.api)
     }
 
     get channelCount(): number {
@@ -72,6 +62,7 @@ export const createAudioNodeMock = createMockFactory<
 
     connect(destinationParam: AudioParam, output?: number | undefined): void
 
+    @ValidateMethodArgsLength(1)
     connect(
       destinationNode: AudioNode | AudioParam,
       output?: number,
@@ -117,8 +108,3 @@ export const createAudioNodeMock = createMockFactory<
 
   return MockAudioNode as typeof AudioNode
 })
-
-export const getGraphAudioNode = (node: AudioNode) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return AUDIO_GRAPH_MAP.get(node)!
-}

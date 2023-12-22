@@ -40,7 +40,6 @@ export class MockBiquadFilterNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -153600,
       maxValue: 153600,
@@ -52,7 +51,6 @@ export class MockBiquadFilterNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 350,
       minValue: 0,
@@ -65,7 +63,6 @@ export class MockBiquadFilterNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 1541.273681640625,
@@ -73,12 +70,17 @@ export class MockBiquadFilterNodeInternals
     }
   )
 
-  protected _Q = createMockAudioParam(this.mockEnvironment.api, this.context, {
-    defaultValue: 1,
-    minValue: -3.4028234663852886e38,
-    maxValue: 3.4028234663852886e38,
-    name: "BiquadFilterNode.Q",
-  })
+  protected _Q = createMockAudioParam(
+    this.mockEnvironment.api,
+    this.context,
+    this.mock,
+    {
+      defaultValue: 1,
+      minValue: -3.4028234663852886e38,
+      maxValue: 3.4028234663852886e38,
+      name: "BiquadFilterNode.Q",
+    }
+  )
 
   protected _type: BiquadFilterType = "lowpass"
 

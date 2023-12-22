@@ -87,7 +87,10 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
               ],
               name: "Max device sample rate, length 20, default channel (check Device Settings)",
             },
-            ...createCommonNumberTestArgs<[AudioBufferOptions]>((length) => ({
+            ...createCommonNumberTestArgs<{
+              args: [AudioBufferOptions]
+              name: string
+            }>((length) => ({
               args: [
                 {
                   length,
@@ -96,29 +99,31 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
               ],
               name: `Length ${length}`,
             })),
-            ...createCommonNumberTestArgs<[AudioBufferOptions]>(
-              (sampleRate) => ({
-                args: [
-                  {
-                    length: 20,
-                    sampleRate,
-                  },
-                ],
-                name: `(Gen) Sample rate ${sampleRate}`,
-              })
-            ),
-            ...createCommonNumberTestArgs<[AudioBufferOptions]>(
-              (numberOfChannels) => ({
-                args: [
-                  {
-                    length: 20,
-                    sampleRate: 44100,
-                    numberOfChannels,
-                  },
-                ],
-                name: `(Gen) Number of channels ${numberOfChannels}`,
-              })
-            ),
+            ...createCommonNumberTestArgs<{
+              args: [AudioBufferOptions]
+              name: string
+            }>((sampleRate) => ({
+              args: [
+                {
+                  length: 20,
+                  sampleRate,
+                },
+              ],
+              name: `(Gen) Sample rate ${sampleRate}`,
+            })),
+            ...createCommonNumberTestArgs<{
+              args: [AudioBufferOptions]
+              name: string
+            }>((numberOfChannels) => ({
+              args: [
+                {
+                  length: 20,
+                  sampleRate: 44100,
+                  numberOfChannels,
+                },
+              ],
+              name: `(Gen) Number of channels ${numberOfChannels}`,
+            })),
           ],
           errorConstructorArgLists: [
             {
@@ -157,9 +162,15 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
               ],
               name: "High max sample rate",
             },
-            ...createVariedTypeArgs<[AudioBufferOptions]>(
+            ...createVariedTypeArgs<
+              {
+                args: [AudioBufferOptions]
+                name: string
+              },
+              [AudioBufferOptions]
+            >(
               (args, value) => ({
-                args,
+                args: args as [AudioBufferOptions],
                 name: `(Gen) Options arg: ${value}`,
               }),
               [
@@ -170,11 +181,17 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 },
               ]
             ),
-            ...createVariedTypeArgs<[AudioBufferOptions]>(
+            ...createVariedTypeArgs<
+              {
+                args: [AudioBufferOptions]
+                name: string
+              },
+              [AudioBufferOptions]
+            >(
               (_, value) => ({
                 args: [
                   {
-                    length: value,
+                    length: value as number,
                     sampleRate: 44100,
                     numberOfChannels: 2,
                   },
@@ -189,12 +206,18 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 },
               ]
             ),
-            ...createVariedTypeArgs<[AudioBufferOptions]>(
+            ...createVariedTypeArgs<
+              {
+                args: [AudioBufferOptions]
+                name: string
+              },
+              [AudioBufferOptions]
+            >(
               (_, value) => ({
                 args: [
                   {
                     length: 20,
-                    sampleRate: value,
+                    sampleRate: value as number,
                     numberOfChannels: 2,
                   },
                 ],
@@ -208,13 +231,19 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 },
               ]
             ),
-            ...createVariedTypeArgs<[AudioBufferOptions]>(
+            ...createVariedTypeArgs<
+              {
+                args: [AudioBufferOptions]
+                name: string
+              },
+              [AudioBufferOptions]
+            >(
               (_, value) => ({
                 args: [
                   {
                     length: 20,
                     sampleRate: 44100,
-                    numberOfChannels: value,
+                    numberOfChannels: value as number,
                   },
                 ],
                 name: `(Gen) Number of channels: ${value}`,
@@ -285,36 +314,41 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 args: [new Float32Array(10), 3, 5],
                 name: "Channel 3, startInChannel 5",
               },
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (channelNumber) => ({
-                  args: [new Float32Array(10), channelNumber],
-                  name: `(Gen) Channel ${channelNumber}`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (channelNumber) => ({
-                  args: [new Float32Array(10), channelNumber, 0],
-                  name: `(Gen) Channel ${channelNumber}, startInChannel 0`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (channelNumber) => ({
-                  args: [new Float32Array(10), channelNumber, 1],
-                  name: `(Gen) Channel ${channelNumber}, startInChannel 1`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (startInChannel) => ({
-                  args: [new Float32Array(10), 0, startInChannel],
-                  name: `(Gen) Channel ${0}, startInChannel ${startInChannel}`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (combo) => ({
-                  args: [new Float32Array(10), combo, combo],
-                  name: `(Gen) Channel ${combo}, startInChannel ${combo}`,
-                })
-              ),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((channelNumber) => ({
+                args: [new Float32Array(10), channelNumber],
+                name: `(Gen) Channel ${channelNumber}`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((channelNumber) => ({
+                args: [new Float32Array(10), channelNumber, 0],
+                name: `(Gen) Channel ${channelNumber}, startInChannel 0`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((channelNumber) => ({
+                args: [new Float32Array(10), channelNumber, 1],
+                name: `(Gen) Channel ${channelNumber}, startInChannel 1`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((startInChannel) => ({
+                args: [new Float32Array(10), 0, startInChannel],
+                name: `(Gen) Channel ${0}, startInChannel ${startInChannel}`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((combo) => ({
+                args: [new Float32Array(10), combo, combo],
+                name: `(Gen) Channel ${combo}, startInChannel ${combo}`,
+              })),
             ],
             copyToChannel: [
               {
@@ -366,36 +400,41 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 args: [new Float32Array(10), 3, 5],
                 name: "Channel 3, startInChannel 5",
               },
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (channelNumber) => ({
-                  args: [new Float32Array(10), channelNumber],
-                  name: `(Gen) Channel ${channelNumber}`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (channelNumber) => ({
-                  args: [new Float32Array(10), channelNumber, 0],
-                  name: `(Gen) Channel ${channelNumber}, startInChannel 0`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (channelNumber) => ({
-                  args: [new Float32Array(10), channelNumber, 1],
-                  name: `(Gen) Channel ${channelNumber}, startInChannel 1`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (startInChannel) => ({
-                  args: [new Float32Array(10), 0, startInChannel],
-                  name: `(Gen) Channel ${0}, startInChannel ${startInChannel}`,
-                })
-              ),
-              ...createCommonNumberTestArgs<[Float32Array, number, number?]>(
-                (combo) => ({
-                  args: [new Float32Array(10), combo, combo],
-                  name: `(Gen) Channel ${combo}, startInChannel ${combo}`,
-                })
-              ),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((channelNumber) => ({
+                args: [new Float32Array(10), channelNumber],
+                name: `(Gen) Channel ${channelNumber}`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((channelNumber) => ({
+                args: [new Float32Array(10), channelNumber, 0],
+                name: `(Gen) Channel ${channelNumber}, startInChannel 0`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((channelNumber) => ({
+                args: [new Float32Array(10), channelNumber, 1],
+                name: `(Gen) Channel ${channelNumber}, startInChannel 1`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((startInChannel) => ({
+                args: [new Float32Array(10), 0, startInChannel],
+                name: `(Gen) Channel ${0}, startInChannel ${startInChannel}`,
+              })),
+              ...createCommonNumberTestArgs<{
+                args: [Float32Array, number, number?]
+                name: string
+              }>((combo) => ({
+                args: [new Float32Array(10), combo, combo],
+                name: `(Gen) Channel ${combo}, startInChannel ${combo}`,
+              })),
             ],
             getChannelData: [
               {
@@ -413,11 +452,13 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 name: "Third channel",
                 stringifyResult: stringifyGetChannelDataResult,
               },
-              ...createCommonNumberTestArgs<[number]>((channelNumber) => ({
-                args: [channelNumber],
-                name: `(Gen) Channel ${channelNumber}`,
-                stringifyResult: stringifyGetChannelDataResult,
-              })),
+              ...createCommonNumberTestArgs<{ args: [number]; name: string }>(
+                (channelNumber) => ({
+                  args: [channelNumber],
+                  name: `(Gen) Channel ${channelNumber}`,
+                  stringifyResult: stringifyGetChannelDataResult,
+                })
+              ),
             ],
           },
           errorMethods: {
@@ -426,16 +467,22 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 args: [new Float32Array(10), 0, 11],
                 name: "startInChannel too high",
               },
-              ...createVariedTypeArgs<[Float32Array, number, number?]>(
+              ...createVariedTypeArgs<
+                { args: [Float32Array, number, number?]; name: string },
+                [Float32Array, number, number?]
+              >(
                 (args, value, argIndex) => ({
-                  args,
+                  args: args as [Float32Array, number, number?],
                   name: `(Gen) Args: ${value} for arg index ${argIndex}`,
                 }),
                 [new Float32Array(10), 0, 11]
               ),
-              ...createMissingArgs<[Float32Array, number, number?]>(
+              ...createMissingArgs<
+                { args: [Float32Array, number, number?]; name: string },
+                [Float32Array, number, number?]
+              >(
                 (args, argIndex) => ({
-                  args,
+                  args: args as [Float32Array, number, number?],
                   name:
                     argIndex === 0
                       ? "(Gen) no args"
@@ -449,14 +496,14 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 args: [new Float32Array(10), 0, 11],
                 name: "startInChannel too high",
               },
-              ...createVariedTypeArgs<[Float32Array, number, number?]>(
+              ...createVariedTypeArgs(
                 (args, value, argIndex) => ({
                   args,
                   name: `(Gen) Args: ${value} for arg index ${argIndex}`,
                 }),
                 [new Float32Array(10), 0, 11]
               ),
-              ...createMissingArgs<[Float32Array, number, number?]>(
+              ...createMissingArgs(
                 (args, argIndex) => ({
                   args,
                   name:
@@ -472,16 +519,16 @@ export const AUDIO_BUFFER_TEST_GROUP: TestGroupConfig = {
                 args: [1_000_000_000],
                 name: "Very high channel",
               },
-              ...createVariedTypeArgs<[number]>(
+              ...createVariedTypeArgs(
                 (args, value) => ({
-                  args,
+                  args: args as [number],
                   name: `(Gen) Args: ${value}`,
                 }),
                 [2]
               ),
-              ...createMissingArgs<[number]>(
+              ...createMissingArgs(
                 (args, argIndex) => ({
-                  args,
+                  args: args as [number],
                   name:
                     argIndex === 0
                       ? "(Gen) no args"

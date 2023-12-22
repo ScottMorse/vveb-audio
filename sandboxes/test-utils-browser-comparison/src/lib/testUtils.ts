@@ -376,8 +376,8 @@ export const compareClass = <T extends ConcreteConstructor>({
  * that includes special numbers such as Infinity,
  * negative Infinity, NaN, etc.
  */
-export const createCommonNumberTestArgs = <Args extends unknown[]>(
-  callback: (x: number) => OptionalArray<{ args: Args; name: string }>,
+export const createCommonNumberTestArgs = <Output = any>(
+  callback: (x: number) => OptionalArray<Output> | undefined,
   otherNumbersToInclude?: number[]
 ) =>
   [
@@ -394,7 +394,8 @@ export const createCommonNumberTestArgs = <Args extends unknown[]>(
     ...(otherNumbersToInclude ?? []),
   ]
     .map(callback)
-    .flatMap((x) => (Array.isArray(x) ? x : [x]))
+    .flatMap((x) => x)
+    .filter((x) => x !== undefined) as Output[]
 
 /**
  * Take an array of base arguments and create
@@ -402,16 +403,12 @@ export const createCommonNumberTestArgs = <Args extends unknown[]>(
  * each arg with a variety of values such as undefined,
  * null, NaN, etc.
  */
-export const createVariedTypeArgs = <Args extends unknown[]>(
+export const createVariedTypeArgs = <Output, Args extends unknown[]>(
   callback: (
     args: unknown[],
     value: unknown,
     argIndex: number
-  ) => {
-    args: unknown[]
-    name: string
-    stringifyResult?: (value: unknown, instance: unknown) => string
-  },
+  ) => OptionalArray<Output> | undefined,
   fullBaseArgs: Args
 ) => {
   const values = [
@@ -442,28 +439,28 @@ export const createVariedTypeArgs = <Args extends unknown[]>(
     new TypeError(),
   ]
 
-  return fullBaseArgs.flatMap((_, i) => {
-    const copy = [...fullBaseArgs]
-    return values.map((value) => {
-      copy[i] = value
-      return callback(copy, value, i)
+  return fullBaseArgs
+    .flatMap((_, i) => {
+      const copy = [...fullBaseArgs]
+      return values.map((value) => {
+        copy[i] = value
+        return callback(copy, value, i)
+      })
     })
-  })
+    .filter((x) => x !== undefined) as Output[]
 }
 
 /** Take a list of args and create new lists of args of lengths up to the give length - 1 */
-export const createMissingArgs = <Args extends unknown[]>(
+export const createMissingArgs = <Output, Args extends unknown[]>(
   callback: (
     args: unknown[],
     upToIndex: number
-  ) => {
-    args: unknown[]
-    name: string
-    stringifyResult?: (value: unknown, instance: unknown) => string
-  },
+  ) => OptionalArray<Output> | undefined,
   fullBaseArgs: Args
 ) => {
-  return fullBaseArgs.flatMap((_, i) => {
-    return callback(fullBaseArgs.slice(0, i), i)
-  })
+  return fullBaseArgs
+    .flatMap((_, i) => {
+      return callback(fullBaseArgs.slice(0, i), i)
+    })
+    .filter((x) => x !== undefined) as Output[]
 }

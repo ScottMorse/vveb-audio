@@ -2,17 +2,9 @@ import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorN
 import { createMockFactory } from "../../../mockFactory"
 import { createMockAudioListener } from "../../audioListener/MockAudioListener"
 import { createMockAudioDestinationNode } from "../../audioNode/destination/MockAudioDestinationNode"
-import { AudioGraphNode } from "./audioGraph"
 import { MockBaseAudioContextInternals } from "./MockBaseAudioContextInternals"
 
 const CURRENT_TIME_EVENT = "_currentTime"
-
-const AUDIO_GRAPH_MAP = new WeakMap<
-  BaseAudioContext,
-  {
-    root: AudioGraphNode
-  }
->()
 
 export const createBaseAudioContextMock = createMockFactory<
   typeof BaseAudioContext,
@@ -48,10 +40,6 @@ export const createBaseAudioContextMock = createMockFactory<
       PRIVATE_PROPS_MAP.set(this, {
         destination,
         listener: createMockAudioListener(mockEnvironment.api, this),
-      })
-
-      AUDIO_GRAPH_MAP.set(this, {
-        root: new AudioGraphNode(destination, true),
       })
     }
 
@@ -205,9 +193,4 @@ export const unListenToCurrentTime = (
   callback: (event: Event) => void
 ) => {
   context.removeEventListener(CURRENT_TIME_EVENT as any, callback)
-}
-
-export const getAudioGraphRoot = (context: BaseAudioContext) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return AUDIO_GRAPH_MAP.get(context)!.root
 }

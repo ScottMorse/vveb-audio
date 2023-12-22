@@ -4,9 +4,7 @@ import { formatSampleRate } from "@@test-utils/mockWebAudio/util/deviceSettings"
 import { MockBaseAudioContextInternals } from "../base/MockBaseAudioContextInternals"
 
 const throwStateDomException = (method: "resume" | "suspend" | "close") => {
-  throw new DOMException(
-    `Failed to execute '${method}' on 'AudioContext': Cannot ${method} a closed AudioContext.`
-  )
+  throw new DOMException(`Cannot ${method} a closed AudioContext.`)
 }
 
 const validateLatencyHint = (latencyHint: number | string) => {

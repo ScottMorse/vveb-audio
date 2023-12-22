@@ -14,7 +14,6 @@ export class MockDelayNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       name: "Delay.delayTime",
     }

@@ -45,7 +45,10 @@ export const AUDIO_CONTEXT_TEST_GROUP: TestGroupConfig = {
               args: [{ sampleRate: 44100 }],
               name: "Sample rate 44.1K",
             },
-            ...createCommonNumberTestArgs<[AudioContextOptions]>((x) => ({
+            ...createCommonNumberTestArgs<{
+              args: [AudioContextOptions]
+              name: string
+            }>((x) => ({
               args: [{ sampleRate: x }],
               name: `Sample rate ${x}`,
             })),
@@ -59,14 +62,14 @@ export const AUDIO_CONTEXT_TEST_GROUP: TestGroupConfig = {
             onstatechange: null,
           },
           errorConstructorArgLists: [
-            ...createVariedTypeArgs<[AudioContextOptions]>(
+            ...createVariedTypeArgs(
               (args) => ({
                 args,
                 name: `AudioContextOptions arg ${args[0]}`,
               }),
               [{ sampleRate: 44100 }]
             ),
-            ...createVariedTypeArgs<[AudioContextOptions]>(
+            ...createVariedTypeArgs(
               ([x]) => ({
                 args: [{ sampleRate: x }],
                 name: `Sample rate ${x}`,
@@ -105,52 +108,42 @@ export const AUDIO_CONTEXT_TEST_GROUP: TestGroupConfig = {
           },
           errorMethods: {
             createPeriodicWave: [
-              ...createVariedTypeArgs<
-                [Float32Array, Float32Array, PeriodicWaveConstraints]
-              >(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args,
                   name: `Float32Array args ${args[0]} ${args[1]} ${args[2]}`,
                 }),
                 [new Float32Array([1, 2, 3]), new Float32Array([4, 5, 6]), {}]
               ),
-              ...createVariedTypeArgs<
-                [Float32Array, Float32Array, PeriodicWaveConstraints]
-              >(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args: [[args[0], 2], [3, 4], {}],
                   name: `Args with value in real ${args[0]}`,
                 }),
                 [new Float32Array([1, 2, 3]), new Float32Array([4, 5, 6]), {}]
               ),
-              ...createVariedTypeArgs<
-                [Float32Array, Float32Array, PeriodicWaveConstraints]
-              >(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args: [[1, 2], [args[0], 4], {}],
                   name: `Args with value in imag ${args[0]}`,
                 }),
                 [new Float32Array([1, 2, 3]), new Float32Array([4, 5, 6]), {}]
               ),
-              ...createVariedTypeArgs<
-                [Float32Array, Float32Array, PeriodicWaveConstraints]
-              >(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args: [[args[0], 2], [args[0], 4], {}],
                   name: `Args with value in real and imag ${args[0]}`,
                 }),
                 [new Float32Array([1, 2, 3]), new Float32Array([4, 5, 6]), {}]
               ),
-              ...createVariedTypeArgs<
-                [Float32Array, Float32Array, PeriodicWaveConstraints]
-              >(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args: [[1, 2], [3, 4], { disableNormalization: args[2] }],
                   name: `Args with disableNormalization ${args[2]}`,
                 }),
                 [new Float32Array([1, 2, 3]), new Float32Array([4, 5, 6]), {}]
               ),
-              ...createMissingArgs<[Float32Array, Float32Array]>(
+              ...createMissingArgs(
                 (args) => ({
                   args,
                   name: `Float32Array args ${args[0]} ${args[1]}`,

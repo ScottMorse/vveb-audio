@@ -1,57 +1,82 @@
 import { StringKeyOf } from "@@core/internal/util/types"
 
-export type BaseEventConfig = { [key: string]: Event }
+export interface TypedEvent<TypeName extends string = string> extends Event {
+  type: TypeName
+}
 
-type EventArgs<
+export const TypedEvent = Event as unknown as {
+  prototype: TypedEvent
+  new <TypeName extends string = string>(
+    type: TypeName,
+    options?: EventInit
+  ): TypedEvent<TypeName>
+}
+
+export type BaseEventConfig = { [key: string]: TypedEvent }
+
+type EventFromName<
   E extends keyof EventConfig,
   EventConfig extends BaseEventConfig
 > = EventConfig[E]
 
-const _TypedEventTarget = EventTarget as unknown as new <
-  EventConfig extends BaseEventConfig
->() => {
-  addEventListener<E extends StringKeyOf<EventConfig>>(
-    event: E,
-    listener: (event: EventConfig[E]) => any
-  ): typeof _TypedEventTarget<EventConfig>
+export interface TypedEventTarget<
+  EventConfig extends BaseEventConfig = BaseEventConfig
+> {
+  addEventListener<EventName extends keyof EventConfig>(
+    event: EventName,
+    listener: (event: EventFromName<EventName, EventConfig>) => any
+  ): void
 
-  removeEventListener<E extends StringKeyOf<EventConfig>>(
-    event: E,
-    listener: (event: EventConfig[E]) => any
-  ): typeof _TypedEventTarget<EventConfig>
+  removeEventListener<EventName extends keyof EventConfig>(
+    event: EventName,
+    listener: (event: EventFromName<EventName, EventConfig>) => any
+  ): void
 
-  dispatchEvent<E extends StringKeyOf<EventConfig>>(
-    event: EventConfig[E]
+  dispatchEvent<EventName extends keyof EventConfig>(
+    event: EventFromName<EventName, EventConfig>
   ): boolean
 }
 
 /**
- * A standard EventEmitter that provides enhanced typing for specific events.
+ * A standard EventTarget that provides enhanced typing for specific events.
  *
- * The EventConfig generic type should map event names to the value
- * that will be passed to a listener. The event emitter is then required to
- * emit events with the correct value type, and listeners must expect
- * the correct type parameter.
+ * The EventConfig generic type should map event names to the type of
+ * Event that will be dispatched for that event name. You should also
+ * use the `TypedEvent` type to create your event types, which similarly
+ * is just a standard Event with enhanced typing.
  *
  * @example
  * ```typescript
- * interface MyEvents {
- *   customEventA: string,
- *   customEventB: { foo: 'bar' | 'baz' },
- *   customEventC: undefined,
+ * // A TypedEvent is essentially a simple type wrapper around a plain native Event
+ * // that defines a specific string name for the event type name
+ * class MyEvent extends TypedEvent<"eventB"> {
+ *   foo = "bar"
  * }
  *
- * const emitter = new TypedEventTarget<MyEvents>()
+ * type MyEvents = {
+ *   eventA: TypedEvent<"eventA">
+ *   eventB: MyEvent
+ * }
  *
- * emitter.emit('customEventA', 'something') // verified payload for customEventA
- * emitter.emit('customEventB', { foo: 'bar' }) // verified payload for customEventB
- * emitter.emit('customEventC') // arg not required for customEventC when payload is undefined
+ * const target = new TypedEventTarget<MyEvents>()
  *
- * emitter.on('customEventA', (s: string) => console.log(s)) // verified listener arg for customEventA
- * emitter.on('customEventB', (obj) => console.log(obj.foo)) // verified listener arg for customEventB
- * emitter.on('customEventC', () => console.log('C fired')) // no listener arg for customEventC when payload is undefined
+ * target.dispatchEvent(new TypedEvent("eventA")) // event type name must match "eventA" thanks to TypedEvent used in MyEvents
+ * target.dispatchEvent(new MyEvent("eventB")) // event instance type must match for eventB thanks to the MyEvents type
+ *
+ * target.addEventListener("eventA", (event) => {
+ *   console.log(event.type) // "eventA" (strictly typed)
+ * })
+ *
+ * target.addEventListener("eventB", (event) => {
+ *   console.log(event.type) // "eventB" (strictly typed)
+ *   console.log(event.foo) // "bar" matches MyEvent type
+ * })
+ *
  * ```
  */
-export class TypedEventTarget<
-  EventConfig extends BaseEventConfig = BaseEventConfig
-> extends _TypedEventTarget<EventConfig> {}
+export const TypedEventTarget = EventTarget as unknown as {
+  prototype: TypedEventTarget
+  new <
+    EventConfig extends BaseEventConfig = BaseEventConfig
+  >(): TypedEventTarget<EventConfig>
+}

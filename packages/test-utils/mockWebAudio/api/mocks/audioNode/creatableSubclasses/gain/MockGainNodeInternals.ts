@@ -14,7 +14,6 @@ export class MockGainNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 1,
       minValue: -3.4028234663852886e38,

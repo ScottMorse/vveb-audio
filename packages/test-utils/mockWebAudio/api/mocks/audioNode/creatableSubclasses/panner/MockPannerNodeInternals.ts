@@ -90,7 +90,6 @@ export class MockPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 1,
       minValue: -3.4028234663852886e38,
@@ -103,7 +102,6 @@ export class MockPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
@@ -115,7 +113,6 @@ export class MockPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
@@ -129,7 +126,6 @@ export class MockPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
@@ -141,7 +137,6 @@ export class MockPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,
@@ -153,7 +148,6 @@ export class MockPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -3.4028234663852886e38,
       maxValue: 3.4028234663852886e38,

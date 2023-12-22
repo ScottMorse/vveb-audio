@@ -3,6 +3,7 @@ import { TestGroupConfig } from "./apiTests/testGroupConfig"
 import { AUDIO_BUFFER_TEST_GROUP } from "./apiTests/testGroups/audioBufferTestGroup"
 import { AUDIO_CONTEXT_TEST_GROUP } from "./apiTests/testGroups/audioContextTestGroup"
 import { AUDIO_LISTENER_TEST_GROUP } from "./apiTests/testGroups/audioListenerTestGroup"
+import { AUDIO_NODE_TEST_GROUP } from "./apiTests/testGroups/audioNodeTestGroup"
 import { AUDIO_PARAM_TEST_GROUP } from "./apiTests/testGroups/audioParamTestGroup"
 import { MEDIA_STREAM_TEST_GROUP } from "./apiTests/testGroups/mediaStreamTestGroup"
 import { MEDIA_STREAM_TRACK_TEST_GROUP } from "./apiTests/testGroups/mediaStreamTrackTestGroup"
@@ -10,6 +11,7 @@ import { OFFLINE_AUDIO_CONTEXT_TEST_GROUP } from "./apiTests/testGroups/offlineA
 import { PERIODIC_WAVE_TEST_GROUP } from "./apiTests/testGroups/periodicWaveTestGroup"
 
 const TEST_GROUPS: TestGroupConfig[] = [
+  AUDIO_NODE_TEST_GROUP,
   AUDIO_PARAM_TEST_GROUP,
   AUDIO_BUFFER_TEST_GROUP,
   PERIODIC_WAVE_TEST_GROUP,

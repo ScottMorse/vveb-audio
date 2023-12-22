@@ -1,21 +1,12 @@
 import { MockConstructorName } from "@@test-utils/mockWebAudio/util/constructorName"
 import { createMockFactory, MockWebAudioApi } from "../../mockFactory"
-import { AudioGraphNode } from "../audioContext/base/audioGraph"
+import { registerGraphNode } from "../audioContext/base/audioGraph"
 import {
   MockAudioParamInternals,
   CreateMockAudioParamOptions,
 } from "./MockAudioParamInternals"
 
 const ALLOW_CONSTRUCTOR = Symbol("ALLOW_CONSTRUCTOR")
-
-const AUDIO_GRAPH_MAP = new WeakMap<
-  AudioParam,
-  {
-    graphNode: AudioGraphNode
-    node: AudioNode | AudioListener
-    context: BaseAudioContext
-  }
->()
 
 export const createAudioParamMock = createMockFactory<
   typeof AudioParam,
@@ -38,11 +29,7 @@ export const createAudioParamMock = createMockFactory<
         new MockAudioParamInternals(this, mockEnvironment, context, options)
       )
 
-      AUDIO_GRAPH_MAP.set(this, {
-        graphNode: new AudioGraphNode(this),
-        node,
-        context,
-      })
+      registerGraphNode(node, context, mockEnvironment.api)
     }
 
     get automationRate() {
@@ -120,10 +107,5 @@ export const createMockAudioParam = (
   options?: CreateMockAudioParamOptions
 ) =>
   new api.AudioParam(
-    ...([context, options, node, ALLOW_CONSTRUCTOR] as unknown as [])
+    ...([context, node, options, ALLOW_CONSTRUCTOR] as unknown as [])
   )
-
-export const getGraphAudioParam = (param: AudioParam) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  return AUDIO_GRAPH_MAP.get(param)!
-}

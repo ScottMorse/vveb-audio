@@ -14,7 +14,6 @@ export class MockStereoPannerNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       minValue: -1,
       name: "StereoPanner.pan",

@@ -150,9 +150,10 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
               ],
               name: "With real only",
             },
-            ...createCommonNumberTestArgs<
-              ConstructorParameters<typeof PeriodicWave>
-            >((x) => ({
+            ...createCommonNumberTestArgs<{
+              args: ConstructorParameters<typeof PeriodicWave>
+              name: string
+            }>((x) => ({
               args: [
                 new OfflineAudioContext({
                   length: 10,
@@ -165,9 +166,10 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
               ],
               name: `With ${x} for all imag/real values`,
             })),
-            ...createCommonNumberTestArgs<
-              ConstructorParameters<typeof PeriodicWave>
-            >((x) => ({
+            ...createCommonNumberTestArgs<{
+              args: ConstructorParameters<typeof PeriodicWave>
+              name: string
+            }>((x) => ({
               args: [
                 new OfflineAudioContext({
                   length: 10,
@@ -180,9 +182,10 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
               ],
               name: `With ${x} for first imag/real values`,
             })),
-            ...createCommonNumberTestArgs<
-              ConstructorParameters<typeof PeriodicWave>
-            >((x) => ({
+            ...createCommonNumberTestArgs<{
+              args: ConstructorParameters<typeof PeriodicWave>
+              name: string
+            }>((x) => ({
               args: [
                 new OfflineAudioContext({
                   length: 10,
@@ -194,9 +197,10 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
               ],
               name: `With ${x} for third imag value`,
             })),
-            ...createCommonNumberTestArgs<
-              ConstructorParameters<typeof PeriodicWave>
-            >((x) => ({
+            ...createCommonNumberTestArgs<{
+              args: ConstructorParameters<typeof PeriodicWave>
+              name: string
+            }>((x) => ({
               args: [
                 new OfflineAudioContext({
                   length: 10,
@@ -214,7 +218,7 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
               args: [],
               name: "No args",
             },
-            ...createVariedTypeArgs<ConstructorParameters<typeof PeriodicWave>>(
+            ...createVariedTypeArgs(
               (args, value, index) => ({
                 args,
                 name: `With ${value} for ${
@@ -232,7 +236,7 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
                 },
               ]
             ),
-            ...createVariedTypeArgs<ConstructorParameters<typeof PeriodicWave>>(
+            ...createVariedTypeArgs(
               (args, value) => ({
                 args: [
                   new OfflineAudioContext({
@@ -252,7 +256,7 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
                 }),
               ]
             ),
-            ...createVariedTypeArgs<ConstructorParameters<typeof PeriodicWave>>(
+            ...createVariedTypeArgs(
               (args, value) => ({
                 args: [
                   new OfflineAudioContext({
@@ -272,7 +276,7 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
                 }),
               ]
             ),
-            ...createVariedTypeArgs<ConstructorParameters<typeof PeriodicWave>>(
+            ...createVariedTypeArgs(
               (args, value) => ({
                 args: [
                   new OfflineAudioContext({
@@ -293,7 +297,7 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
                 }),
               ]
             ),
-            ...createVariedTypeArgs<ConstructorParameters<typeof PeriodicWave>>(
+            ...createVariedTypeArgs(
               (args, value) => ({
                 args: [
                   new OfflineAudioContext({
@@ -314,7 +318,7 @@ export const PERIODIC_WAVE_TEST_GROUP: TestGroupConfig = {
                 }),
               ]
             ),
-            ...createVariedTypeArgs<ConstructorParameters<typeof PeriodicWave>>(
+            ...createVariedTypeArgs(
               (args, value) => ({
                 args: [
                   new OfflineAudioContext({

@@ -3,7 +3,23 @@ import {
   MockInternals,
 } from "@@test-utils/mockWebAudio/api/mockFactory"
 import { isInstanceType } from "@@test-utils/mockWebAudio/util/instanceType"
+import { convertUnsigned32Int } from "@@test-utils/mockWebAudio/util/number"
 import { OmitEventTarget } from "@@test-utils/mockWebAudio/util/types"
+import {
+  AUDIO_GRAPH_VALIDATION_ERRORS,
+  connectGraphNode,
+  ConnectGraphNodeOptions,
+  disconnectGraphNode,
+  DisconnectGraphNodeOptions,
+  validateConnectGraphNode,
+  validateDisconnectGraphNode,
+} from "../../audioContext/base/audioGraph"
+
+// in Chrome, non-finite-numbers are ignored
+const sanitizePinIndex = (value: unknown) =>
+  !isFinite(value as number) || isNaN(value as number)
+    ? 0
+    : convertUnsigned32Int(value)
 
 export class MockAudioNodeInternals
   extends MockInternals<AudioNode>
@@ -87,25 +103,67 @@ export class MockAudioNodeInternals
     output?: number,
     input?: number
   ): AudioNode | void {
-    /** @todo NOTE confirm and implement that destination must have numberOfOutputs > 0 */
+    output = sanitizePinIndex(output)
+    input = sanitizePinIndex(input)
 
-    if (
-      typeof output === "number" &&
-      (output > this.numberOfOutputs - 1 || output < 0)
-    ) {
-      throw new DOMException(
-        `Uncaught DOMException: Failed to execute 'connect' on 'AudioNode': output index (${output}) exceeds number of outputs (${this.numberOfOutputs}).`
+    const isAudioNodeDestination = isInstanceType(
+      destination,
+      "AudioNode",
+      this.mockEnvironment.api
+    )
+
+    const isAudioParamDestination = isInstanceType(
+      destination,
+      "AudioParam",
+      this.mockEnvironment.api
+    )
+
+    if (!isAudioNodeDestination && !isAudioParamDestination) {
+      throw new TypeError(
+        `Failed to execute 'connect' on 'AudioNode': Overload resolution failed.`
       )
     }
-    if (
-      typeof input === "number" &&
-      (input > this.numberOfInputs - 1 || input < 0)
-    ) {
-      throw new DOMException(
-        `Uncaught DOMException: Failed to execute 'connect' on 'AudioNode': input index (${output}) exceeds number of input (${this.numberOfInputs}).`
-      )
+
+    const options: ConnectGraphNodeOptions = {
+      source: this.mock,
+      destination,
+      output,
+      input,
+      context: this.context,
     }
-    if (isInstanceType(destination, "AudioNode", this.mockEnvironment.api)) {
+
+    const error = validateConnectGraphNode(options)
+
+    if (error) {
+      switch (error) {
+        case AUDIO_GRAPH_VALIDATION_ERRORS.contextMisMatch:
+          throw new DOMException(
+            "Failed to execute 'connect' on 'AudioNode': cannot connect to an AudioNode belonging to a different audio context.",
+            "InvalidAccessError"
+          )
+        case AUDIO_GRAPH_VALIDATION_ERRORS.inputOutsideRange:
+          throw new DOMException(
+            `Failed to execute 'connect' on 'AudioNode': input index (${input}) exceeds number of inputs (${this.numberOfInputs}).`,
+            "IndexSizeError"
+          )
+        case AUDIO_GRAPH_VALIDATION_ERRORS.outputOutsideRange:
+          throw new DOMException(
+            `Failed to execute 'connect' on 'AudioNode': output index (${output}) exceeds number of outputs (${this.numberOfOutputs}).`,
+            "IndexSizeError"
+          )
+      }
+      throw new Error(error)
+    }
+
+    connectGraphNode({
+      source: this.mock,
+      destination,
+      output,
+      input,
+      context: this.context,
+    })
+
+    if (isAudioNodeDestination) {
       return destination
     }
   }
@@ -127,10 +185,87 @@ export class MockAudioNodeInternals
   disconnect(destinationParam: AudioParam, output: number): void
 
   disconnect(
-    _destinationNodeOrOutput?: AudioNode | AudioParam | number,
-    _output?: number,
-    _input?: number
-  ) {}
+    destinationNodeOrOutput?: AudioNode | AudioParam | number,
+    output?: number,
+    input?: number
+  ) {
+    destinationNodeOrOutput =
+      typeof destinationNodeOrOutput === "number"
+        ? sanitizePinIndex(destinationNodeOrOutput)
+        : destinationNodeOrOutput
+
+    const isAudioNodeDestination = isInstanceType(
+      destinationNodeOrOutput,
+      "AudioNode",
+      this.mockEnvironment.api
+    )
+
+    const isAudioParamDestination = isInstanceType(
+      destinationNodeOrOutput,
+      "AudioParam",
+      this.mockEnvironment.api
+    )
+
+    if (typeof input === "number" && !isAudioNodeDestination) {
+      throw new TypeError(
+        "Failed to execute 'disconnect' on 'AudioNode': Parameter 1 is not of type 'AudioNode'."
+      )
+    }
+
+    if (
+      typeof output === "number" &&
+      !(isAudioNodeDestination || isAudioParamDestination)
+    ) {
+      throw new TypeError(
+        "Failed to execute 'disconnect' on 'AudioNode': Overload resolution failed."
+      )
+    }
+
+    output = sanitizePinIndex(output)
+    input = sanitizePinIndex(input)
+
+    const options: DisconnectGraphNodeOptions = {
+      source: this.mock,
+      destination: destinationNodeOrOutput,
+      output,
+      input,
+      context: this.context,
+    }
+
+    const error = validateDisconnectGraphNode(options)
+    if (error) {
+      switch (error) {
+        case AUDIO_GRAPH_VALIDATION_ERRORS.contextMisMatch:
+          throw new DOMException(
+            "Failed to execute 'disconnect' on 'AudioNode': cannot disconnect from an AudioNode belonging to a different audio context.",
+            "InvalidAccessError"
+          )
+        case AUDIO_GRAPH_VALIDATION_ERRORS.inputOutsideRange:
+          throw new DOMException(
+            `Failed to execute 'disconnect' on 'AudioNode': input index (${input}) exceeds number of inputs (${this.numberOfInputs}).`,
+            "IndexSizeError"
+          )
+        case AUDIO_GRAPH_VALIDATION_ERRORS.outputOutsideRange:
+          throw new DOMException(
+            `Failed to execute 'disconnect' on 'AudioNode': output index provided (${output}) is outside the range [0, ${this.numberOfOutputs}].`,
+            "IndexSizeError"
+          )
+        case AUDIO_GRAPH_VALIDATION_ERRORS.nodeNotConnected:
+          throw new DOMException(
+            `Failed to execute 'disconnect' on 'AudioNode': the given destination is not connected.`,
+            "InvalidAccessError"
+          )
+        case AUDIO_GRAPH_VALIDATION_ERRORS.outputNotConnected:
+          throw new DOMException(
+            `Failed to execute 'disconnect' on 'AudioNode': output (${output}) is not connected to the input (${input}) of the destination.`,
+            "InvalidAccessError"
+          )
+      }
+      throw new Error(error)
+    }
+
+    disconnectGraphNode(options)
+  }
 
   get numberOfInputs() {
     return 1

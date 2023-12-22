@@ -42,7 +42,6 @@ export class MockDynamicsCompressorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 0.003000000026077032,
       automationRate: "k-rate",
@@ -54,7 +53,6 @@ export class MockDynamicsCompressorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 30,
       maxValue: 40,
@@ -67,7 +65,6 @@ export class MockDynamicsCompressorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 12,
       minValue: 1,
@@ -83,7 +80,6 @@ export class MockDynamicsCompressorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 0.25,
       automationRate: "k-rate",
@@ -95,7 +91,6 @@ export class MockDynamicsCompressorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: -24,
       minValue: -100,

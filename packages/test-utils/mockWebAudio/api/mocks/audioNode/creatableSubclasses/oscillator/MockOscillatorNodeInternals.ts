@@ -42,7 +42,6 @@ export class MockOscillatorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 0,
       minValue: -153600,
@@ -55,7 +54,6 @@ export class MockOscillatorNodeInternals
     this.mockEnvironment.api,
     this.context,
     this.mock,
-    this,
     {
       defaultValue: 440,
       minValue: -22050,

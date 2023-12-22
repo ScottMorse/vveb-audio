@@ -50,39 +50,45 @@ export const AUDIO_LISTENER_TEST_GROUP: TestGroupConfig = {
                 args: [1, 2, 3, 4, 5, 6],
                 name: "1,2,3,4,5,6",
               },
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setOrientation"]>
+                name: string
+              }>((x) => ({
                 args: [x, 2, 3, 4, 5, 6],
                 name: `${x},2,3,4,5,6`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setOrientation"]>
+                name: string
+              }>((x) => ({
                 args: [1, x, 3, 4, 5, 6],
                 name: `1,${x},3,4,5,6`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setOrientation"]>
+                name: string
+              }>((x) => ({
                 args: [1, 2, x, 4, 5, 6],
                 name: `1,2,${x},4,5,6`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setOrientation"]>
+                name: string
+              }>((x) => ({
                 args: [1, 2, 3, x, 5, 6],
                 name: `1,2,3,${x},5,6`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setOrientation"]>
+                name: string
+              }>((x) => ({
                 args: [1, 2, 3, 4, x, 6],
                 name: `1,2,3,4,${x},6`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setOrientation"]>
+                name: string
+              }>((x) => ({
                 args: [1, 2, 3, 4, 5, x],
                 name: `1,2,3,4,5,${x}`,
               })),
@@ -93,27 +99,31 @@ export const AUDIO_LISTENER_TEST_GROUP: TestGroupConfig = {
                 name: "1,2,3",
               },
               // with all args
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setPosition"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setPosition"]>
+                name: string
+              }>((x) => ({
                 args: [x, x, x],
                 name: `(Gen) ${x},${x},${x}`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setPosition"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setPosition"]>
+                name: string
+              }>((x) => ({
                 args: [x, 2, 3],
                 name: `(Gen) ${x},2,3`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setPosition"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setPosition"]>
+                name: string
+              }>((x) => ({
                 args: [1, x, 3],
                 name: `(Gen) 1,${x},3`,
               })),
-              ...createCommonNumberTestArgs<
-                Parameters<AudioListener["setPosition"]>
-              >((x) => ({
+              ...createCommonNumberTestArgs<{
+                args: Parameters<AudioListener["setPosition"]>
+                name: string
+              }>((x) => ({
                 args: [1, 2, x],
                 name: `(Gen) 1,2,${x}`,
               })),
@@ -121,16 +131,14 @@ export const AUDIO_LISTENER_TEST_GROUP: TestGroupConfig = {
           },
           errorMethods: {
             setOrientation: [
-              ...createVariedTypeArgs<
-                Parameters<AudioListener["setOrientation"]>
-              >(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args,
                   name: `(Gen) setOrientation(${args.join(",")})`,
                 }),
                 [1, 2, 3, 4, 5, 6]
               ),
-              ...createMissingArgs<Parameters<AudioListener["setOrientation"]>>(
+              ...createMissingArgs(
                 (args) => ({
                   args,
                   name: `(Gen) setOrientation(${args.join(",")})`,
@@ -139,14 +147,14 @@ export const AUDIO_LISTENER_TEST_GROUP: TestGroupConfig = {
               ),
             ],
             setPosition: [
-              ...createVariedTypeArgs<Parameters<AudioListener["setPosition"]>>(
+              ...createVariedTypeArgs(
                 (args) => ({
                   args,
                   name: `(Gen) setPosition(${args.join(",")})`,
                 }),
                 [1, 2, 3]
               ),
-              ...createMissingArgs<Parameters<AudioListener["setPosition"]>>(
+              ...createMissingArgs(
                 (args) => ({
                   args,
                   name: `(Gen) setPosition(${args.join(",")})`,
