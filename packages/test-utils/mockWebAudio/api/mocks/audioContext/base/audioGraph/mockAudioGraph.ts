@@ -27,9 +27,8 @@ export const registerGraphNode = (
   mockApi: MockWebAudioApi,
   isRoot = false
 ) => {
-  if (GRAPH_NODE_MAP.has(node)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return GRAPH_NODE_MAP.get(node)!
+  const existingNode = GRAPH_NODE_MAP.get(node)
+    cd anyone/ever/make/anything/that's/not/bucking/brokenreturn existingNode
   }
 
   const newNode: GraphNode = {
@@ -79,7 +78,10 @@ export const validateConnectGraphNode = ({
   input = 0,
 }: ConnectGraphNodeOptions) => {
   const sourceNode = getGraphNode(source)
+  if (!sourceNode) return
+
   const destinationNode = getGraphNode(destination)
+  if (!destinationNode) return
 
   if (sourceNode.context !== context || destinationNode.context !== context) {
     return AUDIO_GRAPH_VALIDATION_ERRORS.contextMisMatch
@@ -121,8 +123,8 @@ const addNode = (
   node: GraphNode
 ) => {
   pinIndex = pinIndex ?? 0
-  if (!pinMap[pinIndex].includes(node)) {
-    pinMap[pinIndex].push(node)
+  if (!pinMap[pinIndex]?.includes(node)) {
+    pinMap[pinIndex]?.push(node)
   }
 }
 
@@ -131,6 +133,8 @@ export const connectGraphNode = wrapValidation(
   (options: ConnectGraphNodeOptions) => {
     const sourceNode = getGraphNode(options.source)
     const destinationNode = getGraphNode(options.destination)
+
+    if (!sourceNode || !destinationNode) return
 
     addNode(sourceNode.outputs, options.output, destinationNode)
     addNode(destinationNode.inputs, options.input, sourceNode)
@@ -143,31 +147,47 @@ const removeNode = (
   node: GraphNode
 ) => {
   pinIndex = pinIndex ?? 0
-  pinMap[pinIndex].splice(pinMap[pinIndex].indexOf(node), 1)
+  pinMap[pinIndex]?.splice(pinMap[pinIndex]?.indexOf(node), 1)
 }
 
 const getDestinationNodesToDisconnect = (
   source: GraphNode,
   destination: AudioParam | AudioNode | number | null | undefined
 ) =>
-  typeof destination === "number"
+  (typeof destination === "number"
     ? source.outputs[destination] ?? []
     : !destination
     ? Object.values(source.outputs).flatMap((x) => x)
     : [getGraphNode(destination)]
+  ).filter((x) => !!x) as GraphNode[]
 
 export const validateDisconnectGraphNode = ({
   source,
   destination,
+  context,
   output = 0,
   input = 0,
 }: DisconnectGraphNodeOptions) => {
   const sourceNode = getGraphNode(source)
+  if (!sourceNode) return
+
+  const destinationNodes = getDestinationNodesToDisconnect(
+    sourceNode,
+    destination
+  )
+
+  // check context like with connect
+  if (
+    sourceNode.context !== context ||
+    destinationNodes?.find((x) => x.context !== context)
+  ) {
+    return AUDIO_GRAPH_VALIDATION_ERRORS.contextMisMatch
+  }
 
   if (
     destination &&
     typeof destination === "object" &&
-    !sourceNode.outputs[output].find((node) => node.value === destination)
+    !sourceNode.outputs[output]?.find((node) => node.value === destination)
   ) {
     return AUDIO_GRAPH_VALIDATION_ERRORS.nodeNotConnected
   }
@@ -187,6 +207,8 @@ export const disconnectGraphNode = wrapValidation(
   validateDisconnectGraphNode,
   (options: DisconnectGraphNodeOptions) => {
     const sourceNode = getGraphNode(options.source)
+    if (!sourceNode) return
+
     const destinationNodes = getDestinationNodesToDisconnect(
       sourceNode,
       options.destination
@@ -199,10 +221,15 @@ export const disconnectGraphNode = wrapValidation(
   }
 )
 
-export const getGraphNode = (node: AudioNode | AudioParam): GraphNode => {
+export const getGraphNode = (
+  node: AudioNode | AudioParam
+): GraphNode | undefined => {
   const graphNode = GRAPH_NODE_MAP.get(node)
 
-  if (!graphNode) {
+  if (
+    ["AudioNode", "AudioParam"].includes(node?.constructor?.name) &&
+    !graphNode
+  ) {
     // mock audio nodes/params should always be registered upon instantiation
     throw new Error("Node was not registered")
   }
@@ -212,6 +239,8 @@ export const getGraphNode = (node: AudioNode | AudioParam): GraphNode => {
 
 export const getIsInCompleteGraph = (node: AudioNode | AudioParam): boolean => {
   const graphNode = getGraphNode(node)
+  if (!graphNode) return false
+
   if (graphNode.isRoot) return true
 
   return Object.values(graphNode.outputs).some((nodes) =>

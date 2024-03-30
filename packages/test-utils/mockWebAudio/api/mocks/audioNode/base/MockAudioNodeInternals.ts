@@ -185,14 +185,14 @@ export class MockAudioNodeInternals
   disconnect(destinationParam: AudioParam, output: number): void
 
   disconnect(
-    destinationNodeOrOutput?: AudioNode | AudioParam | number,
-    output?: number,
-    input?: number
+    _destinationNodeOrOutput?: AudioNode | AudioParam | number,
+    _output?: number,
+    _input?: number
   ) {
-    destinationNodeOrOutput =
-      typeof destinationNodeOrOutput === "number"
-        ? sanitizePinIndex(destinationNodeOrOutput)
-        : destinationNodeOrOutput
+    const destinationNodeOrOutput =
+      typeof _destinationNodeOrOutput === "number"
+        ? sanitizePinIndex(_destinationNodeOrOutput)
+        : _destinationNodeOrOutput
 
     const isAudioNodeDestination = isInstanceType(
       destinationNodeOrOutput,
@@ -206,14 +206,14 @@ export class MockAudioNodeInternals
       this.mockEnvironment.api
     )
 
-    if (typeof input === "number" && !isAudioNodeDestination) {
+    if (typeof _input === "number" && !isAudioNodeDestination) {
       throw new TypeError(
         "Failed to execute 'disconnect' on 'AudioNode': Parameter 1 is not of type 'AudioNode'."
       )
     }
 
     if (
-      typeof output === "number" &&
+      typeof _output === "number" &&
       !(isAudioNodeDestination || isAudioParamDestination)
     ) {
       throw new TypeError(
@@ -221,8 +221,8 @@ export class MockAudioNodeInternals
       )
     }
 
-    output = sanitizePinIndex(output)
-    input = sanitizePinIndex(input)
+    const output = sanitizePinIndex(_output)
+    const input = sanitizePinIndex(_input)
 
     const options: DisconnectGraphNodeOptions = {
       source: this.mock,
@@ -234,6 +234,10 @@ export class MockAudioNodeInternals
 
     const error = validateDisconnectGraphNode(options)
     if (error) {
+      const effectiveOutput =
+        typeof _destinationNodeOrOutput === "number"
+          ? destinationNodeOrOutput
+          : output
       switch (error) {
         case AUDIO_GRAPH_VALIDATION_ERRORS.contextMisMatch:
           throw new DOMException(
@@ -247,17 +251,31 @@ export class MockAudioNodeInternals
           )
         case AUDIO_GRAPH_VALIDATION_ERRORS.outputOutsideRange:
           throw new DOMException(
-            `Failed to execute 'disconnect' on 'AudioNode': output index provided (${output}) is outside the range [0, ${this.numberOfOutputs}].`,
+            `Failed to execute 'disconnect' on 'AudioNode': The output index provided (${effectiveOutput}) is outside the range [0, ${
+              this.numberOfOutputs - 1
+            }].`,
             "IndexSizeError"
           )
         case AUDIO_GRAPH_VALIDATION_ERRORS.nodeNotConnected:
+          if (_input !== undefined) {
+            throw new DOMException(
+              `Failed to execute 'disconnect' on 'AudioNode': output (${effectiveOutput}) is not connected to the input (${input}) of the destination.`,
+              "InvalidAccessError"
+            )
+          } else if (_output !== undefined) {
+            throw new DOMException(
+              `Failed to execute 'disconnect' on 'AudioNode': output (${effectiveOutput}) is not connected to the given destination.`,
+              "InvalidAccessError"
+            )
+          }
+
           throw new DOMException(
             `Failed to execute 'disconnect' on 'AudioNode': the given destination is not connected.`,
             "InvalidAccessError"
           )
         case AUDIO_GRAPH_VALIDATION_ERRORS.outputNotConnected:
           throw new DOMException(
-            `Failed to execute 'disconnect' on 'AudioNode': output (${output}) is not connected to the input (${input}) of the destination.`,
+            `Failed to execute 'disconnect' on 'AudioNode': output (${effectiveOutput}) is not connected to the input (${input}) of the destination.`,
             "InvalidAccessError"
           )
       }

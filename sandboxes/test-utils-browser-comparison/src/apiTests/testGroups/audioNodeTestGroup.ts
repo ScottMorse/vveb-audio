@@ -204,7 +204,6 @@ export const AUDIO_NODE_TEST_GROUP: TestGroupConfig = {
           2,
           3
         )
-        return { errors }
 
         withConnection((connectee, mockConnectee) =>
           compareThrow({
